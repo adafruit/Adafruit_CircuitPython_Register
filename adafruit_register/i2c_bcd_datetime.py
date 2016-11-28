@@ -3,32 +3,24 @@ try:
 except:
     import collections
 
-
-##############################################################################
-# Globals and constants
-##############################################################################
-
+# TODO(tannewt): Split out the datetime tuple stuff so it can be shared more widely.
 DateTimeTuple = collections.namedtuple("DateTimeTuple", ["year", "month",
     "day", "weekday", "hour", "minute", "second", "millisecond"])
 
-
-##############################################################################
-# Functions
-##############################################################################
-
 def datetime_tuple(year, month, day, weekday=0, hour=0, minute=0,
                     second=0, millisecond=0):
-    """Return individual values converted into a data structure (a tuple).
+    """Converts individual values into a `DateTimeTuple` with defaults.
 
-    Arguments:
-    year - The year (four digits, required, no default).
-    month - The month (two digits, required, no default).
-    day - The day (two digits, required, no default).
-    weekday - The day of the week (one digit, not required, default zero).
-    hour - The hour (two digits, 24-hour format, not required, default zero).
-    minute - The minute (two digits, not required, default zero).
-    second - The second (two digits, not required, default zero).
-    millisecond - Milliseconds (not supported, default zero).
+    :param int year: The year
+    :param int month: The month
+    :param int day: The day
+    :param int weekday: The day of the week (0-6)
+    :param int hour: The hour
+    :param int minute: The minute
+    :param int second: The second
+    :param int millisecond: not supported
+    :return: The date and time
+    :rtype: DateTimeTuple
     """
     return DateTimeTuple(year, month, day, weekday, hour, minute,second,
         millisecond)
@@ -51,6 +43,15 @@ def _bin2bcd(value):
     return value + 6 * (value // 10)
 
 class BCDDateTimeRegister:
+    """
+    Date and time register using binary coded decimal structure.
+
+    The byte order of the register must be: second, minute, hour, weekday, day, month, year (in years after 2000).
+
+    Values are `DateTimeTuple`
+
+    :param int register_address: The register address to start the read
+    """
     def __init__(self, register_address):
         self.buffer = bytearray(8)
         self.buffer[0] = register_address
@@ -82,6 +83,15 @@ class BCDDateTimeRegister:
         obj.i2c.writeto(obj.device_address, self.buffer)
 
 class BCDAlarmTimeRegister:
+    """
+    Date and time register using binary coded decimal structure.
+
+    The byte order of the register must be: minute, hour, day, weekday.
+
+    Values are `DateTimeTuple` with year, month and seconds ignored.
+
+    :param int register_address: The register address to start the read
+    """
     def __init__(self, register_address):
         self.buffer = bytearray(5)
         self.buffer[0] = register_address
