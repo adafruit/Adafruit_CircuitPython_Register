@@ -5,9 +5,11 @@ SPI register based device. Data descriptors act like basic attributes from the
 outside which makes using them really easy.
 
 ## Creating a driver
-Creating a driver with the register library is really easy. First, import the register modules you need from the [available modules](adafruit_register/index.html):
+Creating a driver with the register library is really easy. First, import the
+register modules you need from the [available modules](adafruit_register/index.html):
 
     from adafruit_register import i2c_bit
+    from adafruit_bus_device import i2c_device
 
 Next, define where the bit is located in the device's memory map:
 
@@ -20,14 +22,13 @@ Next, define where the bit is located in the device's memory map:
         world = i2c_bit.RWBit(0x1, 0x0)
         """Bit to indicate if world is lit."""
 
-Lastly, we need to add two instance members `i2c` and `device_address` so that
-the register classes know how to talk to the device. Make sure their names are
-exact, otherwise the registers will not be able to find them. Also, make sure
-that the i2c device implements the `nativeio.I2C` interface.
+Lastly, we need to add an `i2c_device` member that manages sharing the I2C bus
+for us. Make sure the name is exact, otherwise the registers will not be able to
+find it. Also, make sure that the i2c device implements the `nativeio.I2C`
+interface.
 
         def __init__(self, i2c, device_address=0x0):
-            self.i2c = i2c
-            self.device_address = device_address
+            self.i2c_device = i2c_device.I2CDevice(i2c, device_address)
 
 Thats it! Now we have a class we can use to talk to those registers:
 
@@ -40,9 +41,14 @@ Thats it! Now we have a class we can use to talk to those registers:
         device.world = True
 
 ## Adding register types
-Adding a new register type is a little more complicated because you need to be careful and minimize the amount of memory the class will take. If you don't, then a driver with five registers of your type could take up five times more extra memory.
+Adding a new register type is a little more complicated because you need to be
+careful and minimize the amount of memory the class will take. If you don't,
+then a driver with five registers of your type could take up five times more
+extra memory.
 
-First, determine whether the new register class should go in an existing module or not. When in doubt choose a new module. The more finer grained the modules are, the fewer extra classes a driver needs to load in.
+First, determine whether the new register class should go in an existing module
+or not. When in doubt choose a new module. The more finer grained the modules
+are, the fewer extra classes a driver needs to load in.
 
 Here is the start of the `RWBit` class:
 
@@ -70,7 +76,7 @@ register classes will be shared.
 
 In `__init__` we only use two member variable because each costs 8 bytes of
 memory plus the memory for the value. And remember this gets multiplied by the
-number of registers of this type in a device! Thats why we pack both the
+number of registers of this type in a driver! Thats why we pack both the
 register address and data byte into one bytearray. We could use two byte arrays
 of size one but each MicroPython object is 16 bytes minimum due to the garbage
 collector. So, by sharing a byte array we keep it to the 16 byte minimum instead
@@ -85,24 +91,29 @@ Ok, onward. To make a [data descriptor](https://docs.python.org/3/howto/descript
 we must implement `__get__` and `__set__`.
 
     def __get__(self, obj, objtype=None):
-        obj.i2c.writeto(obj.device_address, self.buffer, end=1, stop=False)
-        obj.i2c.readfrom_into(obj.device_address, self.buffer, start=1)
+        with obj.i2c_device:
+            obj.i2c_device.writeto(self.buffer, end=1, stop=False)
+            obj.i2c_device.readfrom_into(self.buffer, start=1)
         return bool(self.buffer[1] & self.bit_mask)
 
     def __set__(self, obj, value):
-        obj.i2c.writeto(obj.device_address, self.buffer, end=1, stop=False)
-        obj.i2c.readfrom_into(obj.device_address, self.buffer, start=1)
-        if value:
-            self.buffer[1] |= self.bit_mask
-        else:
-            self.buffer[1] &= ~self.bit_mask
-        obj.i2c.writeto(obj.device_address, self.buffer)
+        with obj.i2c_device:
+            obj.i2c_device.writeto(self.buffer, end=1, stop=False)
+            obj.i2c_device.readfrom_into(self.buffer, start=1)
+            if value:
+                self.buffer[1] |= self.bit_mask
+            else:
+                self.buffer[1] &= ~self.bit_mask
+            obj.i2c_device.writeto(self.buffer)
 
 As you can see, we have two places to get state from. First, `self` stores the
 register class members which locate the register within the device memory map.
-Second, `obj` is the device class that uses the register class which must by
-definition provide a `nativeio.I2C` compatible object as ``i2c`` and the 7-bit
-device address as ``device_address``.
+Second, `obj` is the driver class that uses the register class which must by
+definition provide a `adafruit_bus_device.I2CDevice` compatible object as
+``i2c_device``. This object does two thing for us:
+
+  1. Waits for the bus to free, locks it as we use it and frees it after.
+  2. Saves the device address and other settings so we don't have to.
 
 Note that we take heavy advantage of the ``start`` and ``end`` parameters to the
 i2c functions to slice the buffer without actually allocating anything extra.

@@ -1,3 +1,25 @@
+# The MIT License (MIT)
+#
+# Copyright (c) 2016 Scott Shawcroft for Adafruit Industries
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 try:
     import ucollections as collections
 except:
@@ -55,32 +77,32 @@ class BCDDateTimeRegister:
     def __init__(self, register_address):
         self.buffer = bytearray(8)
         self.buffer[0] = register_address
-        self.register_address = memoryview(self.buffer)[:1]
-        self.datetime = memoryview(self.buffer)[1:]
 
     def __get__(self, obj, objtype=None):
         # Read and return the date and time.
-        obj.i2c.writeto(obj.device_address, self.register_address, stop=False)
-        obj.i2c.readfrom_into(obj.device_address, self.datetime)
+        with obj.i2c_device:
+            obj.i2c_device.writeto(self.buffer, end=1, stop=False)
+            obj.i2c_device.readfrom_into(self.buffer, start=1)
         return datetime_tuple(
-            year=_bcd2bin(self.datetime[6]) + 2000,
-            month=_bcd2bin(self.datetime[5]),
-            day=_bcd2bin(self.datetime[4]),
-            weekday=_bcd2bin(self.datetime[3]),
-            hour=_bcd2bin(self.datetime[2]),
-            minute=_bcd2bin(self.datetime[1]),
-            second=_bcd2bin(self.datetime[0]),
+            year=_bcd2bin(self.buffer[7]) + 2000,
+            month=_bcd2bin(self.buffer[6]),
+            day=_bcd2bin(self.buffer[5]),
+            weekday=_bcd2bin(self.buffer[4]),
+            hour=_bcd2bin(self.buffer[3]),
+            minute=_bcd2bin(self.buffer[2]),
+            second=_bcd2bin(self.buffer[1]),
         )
 
     def __set__(self, obj, value):
-        self.datetime[0] = _bin2bcd(value.second)   # format conversions
-        self.datetime[1] = _bin2bcd(value.minute)
-        self.datetime[2] = _bin2bcd(value.hour)
-        self.datetime[3] = _bin2bcd(value.weekday)
-        self.datetime[4] = _bin2bcd(value.day)
-        self.datetime[5] = _bin2bcd(value.month)
-        self.datetime[6] = _bin2bcd(value.year - 2000)
-        obj.i2c.writeto(obj.device_address, self.buffer)
+        self.buffer[1] = _bin2bcd(value.second)   # format conversions
+        self.buffer[2] = _bin2bcd(value.minute)
+        self.buffer[3] = _bin2bcd(value.hour)
+        self.buffer[4] = _bin2bcd(value.weekday)
+        self.buffer[5] = _bin2bcd(value.day)
+        self.buffer[6] = _bin2bcd(value.month)
+        self.buffer[7] = _bin2bcd(value.year - 2000)
+        with obj.i2c_device:
+            obj.i2c_device.writeto(self.buffer)
 
 class BCDAlarmTimeRegister:
     """
@@ -95,25 +117,25 @@ class BCDAlarmTimeRegister:
     def __init__(self, register_address):
         self.buffer = bytearray(5)
         self.buffer[0] = register_address
-        self.register_address = memoryview(self.buffer)[:1]
-        self.alarm_time = memoryview(self.buffer)[1:]
 
     def __get__(self, obj, objtype=None):
         # Read the alarm register.
-        obj.i2c.writeto(obj.device_address, self.register_address, stop=False)
-        obj.i2c.readfrom_into(obj.device_address, self.alarm_time)
-        if not self.alarm_time[0] & 0x80:
+        with obj.i2c_device:
+            obj.i2c_device.writeto(self.buffer, end=1, stop=False)
+            obj.i2c_device.readfrom_into(self.buffer, start=1)
+        if not self.buffer[1] & 0x80:
             return None
         return datetime_tuple(
-            weekday=_bcd2bin(self.alarm_time[3] & 0x7f),
-            day=_bcd2bin(self.alarm_time[2] & 0x7f),
-            hour=_bcd2bin(self.alarm_time[1] & 0x7f),
-            minute=_bcd2bin(self.alarm_time[0] & 0x7f),
+            weekday=_bcd2bin(self.buffer[4] & 0x7f),
+            day=_bcd2bin(self.buffer[3] & 0x7f),
+            hour=_bcd2bin(self.buffer[2] & 0x7f),
+            minute=_bcd2bin(self.buffer[1] & 0x7f),
         )
 
     def __set__(self, obj, value):
-        self.alarm_time[1] = (_bin2bcd(value.minute) if value.minute is not None else 0x80)
-        self.alarm_time[2] = (_bin2bcd(value.hour) if value.hour is not None else 0x80)
-        self.alarm_time[3] = (_bin2bcd(value.day) if value.day is not None else 0x80)
-        self.alarm_time[4] = (_bin2bcd(value.weekday) | 0b01000000 if value.weekday is not None else 0x80)
-        obj.i2c.writeto(obj.device_address, self.buffer)
+        self.buffer[1] = (_bin2bcd(value.minute) if value.minute is not None else 0x80)
+        self.buffer[2] = (_bin2bcd(value.hour) if value.hour is not None else 0x80)
+        self.buffer[3] = (_bin2bcd(value.day) if value.day is not None else 0x80)
+        self.buffer[4] = (_bin2bcd(value.weekday) | 0b01000000 if value.weekday is not None else 0x80)
+        with obj.i2c_device:
+            obj.i2c_device.writeto(self.buffer)

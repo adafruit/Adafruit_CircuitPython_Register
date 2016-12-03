@@ -3,3 +3,4 @@
 dist
 *.pyc
 _build/
+*.mpy
