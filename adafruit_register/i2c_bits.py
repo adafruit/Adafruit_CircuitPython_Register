@@ -20,42 +20,57 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-class RWBit:
+class RWBits:
     """
-    Single bit register that is readable and writeable.
+    Multibit register (less than a full byte) that is readable and writeable.
+    This must be within a byte register.
 
-    Values are `bool`
+    Values are `int` between 0 and 2 ** ``num_bits`` - 1.
 
+    :param int num_bits: The number of bits in the field.
     :param int register_address: The register address to read the bit from
-    :param type bit: The bit index within the byte at ``register_address``
+    :param type lowest_bit: The lowest bits index within the byte at ``register_address``
     """
-    def __init__(self, register_address, bit):
-        self.bit_mask = 1 << bit
+    def __init__(self, num_bits, register_address, lowest_bit):
+        self.bit_mask = 0
+        for i in range(num_bits):
+            self.bit_mask = (self.bit_mask << 1) + 1
+        self.bit_mask = self.bit_mask << lowest_bit
+        if self.bit_mask >= (1 << 8):
+            raise ValueError()
         self.buffer = bytearray(2)
         self.buffer[0] = register_address
+        self.lowest_bit = lowest_bit
 
     def __get__(self, obj, objtype=None):
         with obj.i2c_device as i2c:
             i2c.writeto(self.buffer, end=1, stop=False)
             i2c.readfrom_into(self.buffer, start=1)
-        return bool(self.buffer[1] & self.bit_mask)
+        return (self.buffer[1] & self.bit_mask) >> lowest_bit
 
     def __set__(self, obj, value):
+        # Shift the value to the appropriate spot and set all bits that aren't
+        # ours to 1 (the negation of the bitmask.)
+        value = (value << self.lowest_bit) | ~self.bit_mask
         with obj.i2c_device as i2c:
             i2c.writeto(self.buffer, end=1, stop=False)
             i2c.readfrom_into(self.buffer, start=1)
-            if value:
-                self.buffer[1] |= self.bit_mask
-            else:
-                self.buffer[1] &= ~self.bit_mask
+            # Set all of our bits to 1.
+            self.buffer[1] |= self.bit_mask
+            # Set all 0 bits to 0 by anding together.
+            self.buffer[1] &= value
             i2c.writeto(self.buffer)
 
-class ROBit(RWBit):
-    """Single bit register that is read only. Subclass of `RWBit`.
+class ROBits(RWBits):
+    """
+    Multibit register (less than a full byte) that is read-only. This must be
+    within a byte register.
 
-    Values are `bool`
+    Values are `int` between 0 and 2 ** ``num_bits`` - 1.
 
+    :param int num_bits: The number of bits in the field.
     :param int register_address: The register address to read the bit from
-    :param type bit: The bit index within the byte at ``register_address``"""
+    :param type lowest_bit: The lowest bits index within the byte at ``register_address``
+    """
     def __set__(self, obj, value):
         raise AttributeError()

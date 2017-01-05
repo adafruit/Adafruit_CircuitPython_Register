@@ -68,15 +68,24 @@ class BCDDateTimeRegister:
     """
     Date and time register using binary coded decimal structure.
 
-    The byte order of the register must be: second, minute, hour, weekday, day, month, year (in years after 2000).
+    The byte order of the register must* be: second, minute, hour, weekday, day (1-31), month, year (in years after 2000).
+
+    \* Setting weekday_first=False will flip the weekday/day order so that day comes first.
 
     Values are `DateTimeTuple`
 
     :param int register_address: The register address to start the read
+    :param bool weekday_first: True if weekday is in a lower register than the day of the month (1-31)
+    :param int weekday_start: 0 or 1 depending on the RTC's representation of the first day of the week
     """
-    def __init__(self, register_address):
+    def __init__(self, register_address, weekday_first=True, weekday_start=1):
         self.buffer = bytearray(8)
         self.buffer[0] = register_address
+        if weekday_first:
+            self.weekday_offset = 0
+        else:
+            self.weekday_offset = 1
+        self.weekday_start = weekday_start
 
     def __get__(self, obj, objtype=None):
         # Read and return the date and time.
@@ -86,37 +95,48 @@ class BCDDateTimeRegister:
         return datetime_tuple(
             year=_bcd2bin(self.buffer[7]) + 2000,
             month=_bcd2bin(self.buffer[6]),
-            day=_bcd2bin(self.buffer[5]),
-            weekday=_bcd2bin(self.buffer[4]),
+            day=_bcd2bin(self.buffer[5 - self.weekday_offset]),
+            weekday=_bcd2bin(self.buffer[4 + self.weekday_offset] - self.weekday_start),
             hour=_bcd2bin(self.buffer[3]),
             minute=_bcd2bin(self.buffer[2]),
-            second=_bcd2bin(self.buffer[1]),
+            second=_bcd2bin(self.buffer[1] & 0x7F),
         )
 
     def __set__(self, obj, value):
-        self.buffer[1] = _bin2bcd(value.second)   # format conversions
+        self.buffer[1] = _bin2bcd(value.second) & 0x7F   # format conversions
         self.buffer[2] = _bin2bcd(value.minute)
         self.buffer[3] = _bin2bcd(value.hour)
-        self.buffer[4] = _bin2bcd(value.weekday)
-        self.buffer[5] = _bin2bcd(value.day)
+        self.buffer[4 + self.weekday_offset] = _bin2bcd(value.weekday + self.weekday_start)
+        self.buffer[5 - self.weekday_offset] = _bin2bcd(value.day)
         self.buffer[6] = _bin2bcd(value.month)
         self.buffer[7] = _bin2bcd(value.year - 2000)
         with obj.i2c_device:
             obj.i2c_device.writeto(self.buffer)
 
+ALARM_COMPONENT_DISABLED = 0x80
+
 class BCDAlarmTimeRegister:
     """
     Date and time register using binary coded decimal structure.
 
-    The byte order of the register must be: minute, hour, day, weekday.
+    The byte order of the register must* be: minute, hour, day, weekday.
+
+    \* If weekday_shared is True, then weekday and day share a register.
 
     Values are `DateTimeTuple` with year, month and seconds ignored.
 
     :param int register_address: The register address to start the read
+    :param bool weekday_shared: True if weekday and day share the same register
+    :param int weekday_start: 0 or 1 depending on the RTC's representation of the first day of the week (Monday)
     """
-    def __init__(self, register_address):
-        self.buffer = bytearray(5)
+    def __init__(self, register_address, weekday_shared=True, weekday_start=1):
+        buffer_size = 5
+        if weekday_shared:
+            buffer_size -= 1
+        self.buffer = bytearray(buffer_size)
         self.buffer[0] = register_address
+        self.weekday_shared = weekday_shared
+        self.weekday_start = weekday_start
 
     def __get__(self, obj, objtype=None):
         # Read the alarm register.
@@ -126,16 +146,28 @@ class BCDAlarmTimeRegister:
         if not self.buffer[1] & 0x80:
             return None
         return datetime_tuple(
-            weekday=_bcd2bin(self.buffer[4] & 0x7f),
-            day=_bcd2bin(self.buffer[3] & 0x7f),
+            weekday=_bcd2bin(self.buffer[3] & 0x7f) - self.weekday_start,
+            day=_bcd2bin(self.buffer[4] & 0x7f),
             hour=_bcd2bin(self.buffer[2] & 0x7f),
             minute=_bcd2bin(self.buffer[1] & 0x7f),
         )
 
     def __set__(self, obj, value):
-        self.buffer[1] = (_bin2bcd(value.minute) if value.minute is not None else 0x80)
-        self.buffer[2] = (_bin2bcd(value.hour) if value.hour is not None else 0x80)
-        self.buffer[3] = (_bin2bcd(value.day) if value.day is not None else 0x80)
-        self.buffer[4] = (_bin2bcd(value.weekday) | 0b01000000 if value.weekday is not None else 0x80)
+        minute = ALARM_COMPONENT_DISABLED
+        if value.minute is not None:
+            minute = _bin2bcd(value.minute)
+        self.buffer[1] = minute
+
+        hour = ALARM_COMPONENT_DISABLED
+        if value.hour is not None:
+            hour = _bin2bcd(value.hour)
+        self.buffer[2] = hour
+
+        if not self.weekday_shared:
+            day = ALARM_COMPONENT_DISABLED
+            self.buffer[4] = (_bin2bcd(value.day) if value.day is not None else 0x80)
+
+        self.buffer[3 + self.weekday_offset] = (_bin2bcd(value.weekday + self.weekday_start) | 0b01000000 if value.weekday is not None else 0x80)
+
         with obj.i2c_device:
             obj.i2c_device.writeto(self.buffer)
