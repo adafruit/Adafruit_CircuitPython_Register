@@ -282,4 +282,5 @@ htmlhelp_basename = 'MicroPythondoc'
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/3/': None,
-                       'https://circuitpython.readthedocs.io/en/latest/': None}
+                       'https://circuitpython.readthedocs.io/en/latest/': None,
+                       'https://circuitpython.readthedocs.io/projects/bus_device/en/latest/': None}

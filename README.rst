@@ -39,10 +39,10 @@ Next, define where the bit is located in the device's memory map:
         world = i2c_bit.RWBit(0x1, 0x0)
         """Bit to indicate if world is lit."""
 
-Lastly, we need to add an ``i2c_device`` member that manages sharing the I2C bus
-for us. Make sure the name is exact, otherwise the registers will not be able to
-find it. Also, make sure that the i2c device implements the `nativeio.I2C`
-interface.
+Lastly, we need to add an ``i2c_device`` member of type :class:`~adafruit_bus_device.i2c_device.I2CDevice`
+that manages sharing the I2C bus for us. Make sure the name is exact, otherwise
+the registers will not be able to find it. Also, make sure that the i2c device
+implements the `nativeio.I2C` interface.
 
 .. code-block:: python
 
@@ -136,8 +136,8 @@ we must implement ``__get__`` and ``__set__``.
 As you can see, we have two places to get state from. First, ``self`` stores the
 register class members which locate the register within the device memory map.
 Second, ``obj`` is the driver class that uses the register class which must by
-definition provide a `adafruit_bus_device.I2CDevice` compatible object as
-``i2c_device``. This object does two thing for us:
+definition provide a :class:`~adafruit_bus_device.i2c_device.I2CDevice` compatible
+object as ``i2c_device``. This object does two thing for us:
 
   1. Waits for the bus to free, locks it as we use it and frees it after.
   2. Saves the device address and other settings so we don't have to.
