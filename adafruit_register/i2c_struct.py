@@ -44,6 +44,6 @@ class Struct:
         return ustruct.unpack_from(self.format, memoryview(self.buffer)[1:])
 
     def __set__(self, obj, value):
-        struct.pack_into(self.format, self.buffer, 1, *value)
+        ustruct.pack_into(self.format, self.buffer, 1, *value)
         with obj.i2c_device:
             obj.i2c_device.writeto(self.buffer)
