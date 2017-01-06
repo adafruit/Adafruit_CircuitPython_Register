@@ -1,17 +1,34 @@
-# Adafruit's Register library
-This library provides a variety of data descriptor class for Adafruit's
-MicroPython that makes it really simple to write a device driver for an I2C or
-SPI register based device. Data descriptors act like basic attributes from the
-outside which makes using them really easy.
+Adafruit CircuitPython Register library
+=======================================
 
-## Creating a driver
+This library provides a variety of data descriptor class for [Adafruit
+CircuitPython](https://github.com/adafruit/circuitpython) that makes it really
+simple to write a device drivers for a I2C and SPI register based devices. Data
+descriptors act like basic attributes from the outside which makes using them
+really easy to use.
+
+API
+---
+.. toctree::
+    :maxdepth: 3
+
+    adafruit_register/index
+
+
+Creating a driver
+-----------------
+
 Creating a driver with the register library is really easy. First, import the
 register modules you need from the [available modules](adafruit_register/index.html):
+
+.. code-block:: python
 
     from adafruit_register import i2c_bit
     from adafruit_bus_device import i2c_device
 
 Next, define where the bit is located in the device's memory map:
+
+.. code-block:: python
 
     class HelloWorldDevice:
         """Device with two bits to control when the words 'hello' and 'world' are lit."""
@@ -27,10 +44,14 @@ for us. Make sure the name is exact, otherwise the registers will not be able to
 find it. Also, make sure that the i2c device implements the `nativeio.I2C`
 interface.
 
+.. code-block:: python
+
         def __init__(self, i2c, device_address=0x0):
             self.i2c_device = i2c_device.I2CDevice(i2c, device_address)
 
 Thats it! Now we have a class we can use to talk to those registers:
+
+.. code-block:: python
 
     import nativeio
     from board import *
@@ -40,7 +61,9 @@ Thats it! Now we have a class we can use to talk to those registers:
         device.hello = True
         device.world = True
 
-## Adding register types
+Adding register types
+--------------------------
+
 Adding a new register type is a little more complicated because you need to be
 careful and minimize the amount of memory the class will take. If you don't,
 then a driver with five registers of your type could take up five times more
@@ -51,6 +74,8 @@ or not. When in doubt choose a new module. The more finer grained the modules
 are, the fewer extra classes a driver needs to load in.
 
 Here is the start of the `RWBit` class:
+
+.. code-block:: python
 
     class RWBit:
         """
@@ -90,6 +115,8 @@ lazily allocates the underlying buffer call it `FooLazy`.
 Ok, onward. To make a [data descriptor](https://docs.python.org/3/howto/descriptor.html)
 we must implement `__get__` and `__set__`.
 
+.. code-block:: python
+
     def __get__(self, obj, objtype=None):
         with obj.i2c_device:
             obj.i2c_device.writeto(self.buffer, end=1, stop=False)
@@ -122,3 +149,10 @@ They function just like ``self.buffer[start:end]`` without the extra allocation.
 Thats it! Now you can use your new register class like the example above. Just
 remember to keep the number of members to a minimum because the class may be
 used a bunch of times.
+
+Indices and tables
+------------------
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

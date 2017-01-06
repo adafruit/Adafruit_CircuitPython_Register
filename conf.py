@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.abspath('.'))
 
 
 # Specify a custom master document based on the port name
-master_doc = 'index'
+master_doc = 'README'
 
 # -- General configuration ------------------------------------------------
 
@@ -58,11 +58,11 @@ source_parsers = {'.md': CommonMarkParser }
 #master_doc = 'index'
 
 # General information about the project.
-project = 'Adafruit MicroPython Register'
-copyright = '2016 Scott Shawcroft for Adafruit Industries'
+project = 'Adafruit CircuitPython Register'
+copyright = '2016-2017 Scott Shawcroft and Tony Dicola for Adafruit Industries'
 
 from pkg_resources import get_distribution
-release = get_distribution('adafruit-micropython-register').version
+release = get_distribution('adafruit-circuitpython-register').version
 # for example take major/minor
 version = '.'.join(release.split('.')[:2])
 # The full version, including alpha/beta/rc tags.

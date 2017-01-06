@@ -10,6 +10,18 @@ I2C
 .. automodule:: adafruit_register.i2c_bit
    :members:
 
+`i2c_bits` - Multi bit registers
+++++++++++++++++++++++++++++++++
+
+.. automodule:: adafruit_register.i2c_bits
+    :members:
+
+`i2c_struct` - Generic structured registers based on `struct`
+++++++++++++++++++++++++++++++++
+
+.. automodule:: adafruit_register.i2c_struct
+    :members:
+
 `i2c_bcd_datetime` - Binary Coded Decimal date and time registers
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

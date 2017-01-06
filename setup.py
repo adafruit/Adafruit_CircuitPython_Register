@@ -18,16 +18,16 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='adafruit-micropython-register',
+    name='adafruit-circuitpython-register',
 
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
 
-    description='MicroPython data descriptor classes to represent hardware registers on I2C and SPI devices.',
+    description='CircuitPython data descriptor classes to represent hardware registers on I2C and SPI devices.',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/adafruit/Adafruit_MicroPython_Register',
+    url='https://github.com/adafruit/Adafruit_CircuitPython_Register',
 
     # Author details
     author='Adafruit Industries',
@@ -49,7 +49,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='adafruit register micropython',
+    keywords='adafruit register micropython circuitpython',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
