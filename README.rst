@@ -1,8 +1,8 @@
 Adafruit CircuitPython Register library
 =======================================
 
-This library provides a variety of data descriptor class for [Adafruit
-CircuitPython](https://github.com/adafruit/circuitpython) that makes it really
+This library provides a variety of data descriptor class for `Adafruit
+CircuitPython <https://github.com/adafruit/circuitpython>`_ that makes it really
 simple to write a device drivers for a I2C and SPI register based devices. Data
 descriptors act like basic attributes from the outside which makes using them
 really easy to use.
@@ -19,7 +19,7 @@ Creating a driver
 -----------------
 
 Creating a driver with the register library is really easy. First, import the
-register modules you need from the [available modules](adafruit_register/index.html):
+register modules you need from the `available modules <adafruit_register/index.html>`_:
 
 .. code-block:: python
 
@@ -39,7 +39,7 @@ Next, define where the bit is located in the device's memory map:
         world = i2c_bit.RWBit(0x1, 0x0)
         """Bit to indicate if world is lit."""
 
-Lastly, we need to add an `i2c_device` member that manages sharing the I2C bus
+Lastly, we need to add an ``i2c_device`` member that manages sharing the I2C bus
 for us. Make sure the name is exact, otherwise the registers will not be able to
 find it. Also, make sure that the i2c device implements the `nativeio.I2C`
 interface.
@@ -93,27 +93,27 @@ Here is the start of the `RWBit` class:
 
 The first thing done is writing an RST formatted class comment that explains the
 functionality of the register class and any requirements of the register layout.
-It also documents the parameters passed into the constructor (`__init__`) which
+It also documents the parameters passed into the constructor (``__init__``) which
 configure the register location in the device map. It does not include the
 device address or the i2c object because its shared on the device class instance
 instead. That way if you have multiple of the same device on the same bus, the
 register classes will be shared.
 
-In `__init__` we only use two member variable because each costs 8 bytes of
+In ``__init__`` we only use two member variable because each costs 8 bytes of
 memory plus the memory for the value. And remember this gets multiplied by the
 number of registers of this type in a driver! Thats why we pack both the
 register address and data byte into one bytearray. We could use two byte arrays
 of size one but each MicroPython object is 16 bytes minimum due to the garbage
 collector. So, by sharing a byte array we keep it to the 16 byte minimum instead
-of 32 bytes. `memoryview`s also cost 16 bytes minimum so we avoid them too.
+of 32 bytes. Each `memoryview` also costs 16 bytes minimum so we avoid them too.
 
 Another thing we could do is allocate the `bytearray` only when we need it. This
 has the advantage of taking less memory up front but the cost of allocating it
-every access and risking it failing. If you want to add a version of `Foo` that
-lazily allocates the underlying buffer call it `FooLazy`.
+every access and risking it failing. If you want to add a version of ``Foo`` that
+lazily allocates the underlying buffer call it ``FooLazy``.
 
-Ok, onward. To make a [data descriptor](https://docs.python.org/3/howto/descriptor.html)
-we must implement `__get__` and `__set__`.
+Ok, onward. To make a `data descriptor <https://docs.python.org/3/howto/descriptor.html>`_
+we must implement ``__get__`` and ``__set__``.
 
 .. code-block:: python
 
@@ -133,9 +133,9 @@ we must implement `__get__` and `__set__`.
                 self.buffer[1] &= ~self.bit_mask
             obj.i2c_device.writeto(self.buffer)
 
-As you can see, we have two places to get state from. First, `self` stores the
+As you can see, we have two places to get state from. First, ``self`` stores the
 register class members which locate the register within the device memory map.
-Second, `obj` is the driver class that uses the register class which must by
+Second, ``obj`` is the driver class that uses the register class which must by
 definition provide a `adafruit_bus_device.I2CDevice` compatible object as
 ``i2c_device``. This object does two thing for us:
 

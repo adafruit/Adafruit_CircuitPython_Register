@@ -17,7 +17,7 @@ I2C
     :members:
 
 `i2c_struct` - Generic structured registers based on `struct`
-++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. automodule:: adafruit_register.i2c_struct
     :members:
