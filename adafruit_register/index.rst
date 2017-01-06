@@ -1,3 +1,5 @@
+.. _register-module-reference:
+
 Module Reference
 ================
 
