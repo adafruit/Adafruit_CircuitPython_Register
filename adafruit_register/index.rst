@@ -24,10 +24,16 @@ I2C
 .. automodule:: adafruit_register.i2c_struct
     :members:
 
-`i2c_bcd_datetime` - Binary Coded Decimal date and time registers
+`i2c_bcd_datetime` - Binary Coded Decimal date and time register
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. automodule:: adafruit_register.i2c_bcd_datetime
+  :members:
+
+`i2c_bcd_alarm` - Binary Coded Decimal alarm register
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+.. automodule:: adafruit_register.i2c_bcd_alarm
   :members:
 
 SPI
