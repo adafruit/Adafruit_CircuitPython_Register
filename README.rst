@@ -42,7 +42,7 @@ Next, define where the bit is located in the device's memory map:
 Lastly, we need to add an ``i2c_device`` member of type :class:`~adafruit_bus_device.i2c_device.I2CDevice`
 that manages sharing the I2C bus for us. Make sure the name is exact, otherwise
 the registers will not be able to find it. Also, make sure that the i2c device
-implements the `nativeio.I2C` interface.
+implements the `busio.I2C` interface.
 
 .. code-block:: python
 
@@ -53,10 +53,10 @@ Thats it! Now we have a class we can use to talk to those registers:
 
 .. code-block:: python
 
-    import nativeio
+    import busio
     from board import *
 
-    with nativeio.I2C(SCL, SDA) as i2c:
+    with busio.I2C(SCL, SDA) as i2c:
         device = HelloWorldDevice(i2c)
         device.hello = True
         device.world = True
