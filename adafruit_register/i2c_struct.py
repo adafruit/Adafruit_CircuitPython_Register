@@ -39,14 +39,14 @@ class Struct:
 
     def __get__(self, obj, objtype=None):
         with obj.i2c_device:
-            obj.i2c_device.writeto(self.buffer, end=1, stop=False)
-            obj.i2c_device.readfrom_into(self.buffer, start=1)
+            obj.i2c_device.write(self.buffer, end=1, stop=False)
+            obj.i2c_device.read_into(self.buffer, start=1)
         return ustruct.unpack_from(self.format, memoryview(self.buffer)[1:])
 
     def __set__(self, obj, value):
         ustruct.pack_into(self.format, self.buffer, 1, *value)
         with obj.i2c_device:
-            obj.i2c_device.writeto(self.buffer)
+            obj.i2c_device.write(self.buffer)
 
 class UnaryStruct:
     """
@@ -65,11 +65,11 @@ class UnaryStruct:
 
     def __get__(self, obj, objtype=None):
         with obj.i2c_device:
-            obj.i2c_device.writeto(self.buffer, end=1, stop=False)
-            obj.i2c_device.readfrom_into(self.buffer, start=1)
+            obj.i2c_device.write(self.buffer, end=1, stop=False)
+            obj.i2c_device.read_into(self.buffer, start=1)
         return ustruct.unpack_from(self.format, memoryview(self.buffer)[1:])[0]
 
     def __set__(self, obj, value):
         ustruct.pack_into(self.format, self.buffer, 1, value)
         with obj.i2c_device:
-            obj.i2c_device.writeto(self.buffer)
+            obj.i2c_device.write(self.buffer)

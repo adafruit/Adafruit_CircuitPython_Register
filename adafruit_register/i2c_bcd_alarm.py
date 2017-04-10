@@ -84,8 +84,8 @@ class BCDAlarmTimeRegister:
     def __get__(self, obj, objtype=None):
         # Read the alarm register.
         with obj.i2c_device:
-            obj.i2c_device.writeto(self.buffer, end=1, stop=False)
-            obj.i2c_device.readfrom_into(self.buffer, start=1)
+            obj.i2c_device.write(self.buffer, end=1, stop=False)
+            obj.i2c_device.read_into(self.buffer, start=1)
 
         frequency = None
         i = 1
@@ -162,4 +162,4 @@ class BCDAlarmTimeRegister:
             self.buffer[i + 2] = _bin2bcd(value[0].tm_mday)
 
         with obj.i2c_device:
-            obj.i2c_device.writeto(self.buffer)
+            obj.i2c_device.write(self.buffer)
