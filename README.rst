@@ -119,19 +119,19 @@ we must implement ``__get__`` and ``__set__``.
 
     def __get__(self, obj, objtype=None):
         with obj.i2c_device:
-            obj.i2c_device.writeto(self.buffer, end=1, stop=False)
+            obj.i2c_device.write(self.buffer, end=1, stop=False)
             obj.i2c_device.read_into(self.buffer, start=1)
         return bool(self.buffer[1] & self.bit_mask)
 
     def __set__(self, obj, value):
         with obj.i2c_device:
-            obj.i2c_device.writeto(self.buffer, end=1, stop=False)
+            obj.i2c_device.write(self.buffer, end=1, stop=False)
             obj.i2c_device.read_into(self.buffer, start=1)
             if value:
                 self.buffer[1] |= self.bit_mask
             else:
                 self.buffer[1] &= ~self.bit_mask
-            obj.i2c_device.writeto(self.buffer)
+            obj.i2c_device.write(self.buffer)
 
 As you can see, we have two places to get state from. First, ``self`` stores the
 register class members which locate the register within the device memory map.
