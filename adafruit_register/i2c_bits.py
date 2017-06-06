@@ -46,7 +46,7 @@ class RWBits:
         with obj.i2c_device as i2c:
             i2c.write(self.buffer, end=1, stop=False)
             i2c.read_into(self.buffer, start=1)
-        return (self.buffer[1] & self.bit_mask) >> lowest_bit
+        return (self.buffer[1] & self.bit_mask) >> self.lowest_bit
 
     def __set__(self, obj, value):
         # Shift the value to the appropriate spot and set all bits that aren't
