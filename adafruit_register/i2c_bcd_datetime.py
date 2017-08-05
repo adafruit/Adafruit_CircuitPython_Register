@@ -47,7 +47,7 @@ class BCDDateTimeRegister:
 
     \* Setting weekday_first=False will flip the weekday/day order so that day comes first.
 
-    Values are `DateTimeTuple`
+    Values are `time.struct_time`
 
     :param int register_address: The register address to start the read
     :param bool weekday_first: True if weekday is in a lower register than the day of the month (1-31)
@@ -78,12 +78,12 @@ class BCDDateTimeRegister:
                                  -1))
 
     def __set__(self, obj, value):
-        self.buffer[1] = _bin2bcd(value.second) & 0x7F   # format conversions
-        self.buffer[2] = _bin2bcd(value.minute)
-        self.buffer[3] = _bin2bcd(value.hour)
-        self.buffer[4 + self.weekday_offset] = _bin2bcd(value.weekday + self.weekday_start)
-        self.buffer[5 - self.weekday_offset] = _bin2bcd(value.day)
-        self.buffer[6] = _bin2bcd(value.month)
-        self.buffer[7] = _bin2bcd(value.year - 2000)
+        self.buffer[1] = _bin2bcd(value.tm_sec) & 0x7F   # format conversions
+        self.buffer[2] = _bin2bcd(value.tm_min)
+        self.buffer[3] = _bin2bcd(value.tm_hour)
+        self.buffer[4 + self.weekday_offset] = _bin2bcd(value.tm_wday + self.weekday_start)
+        self.buffer[5 - self.weekday_offset] = _bin2bcd(value.tm_mday)
+        self.buffer[6] = _bin2bcd(value.tm_mon)
+        self.buffer[7] = _bin2bcd(value.tm_year - 2000)
         with obj.i2c_device:
             obj.i2c_device.write(self.buffer)
