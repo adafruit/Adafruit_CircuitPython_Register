@@ -22,7 +22,7 @@
 
 try:
     import struct
-except:
+except ImportError:
     import ustruct as struct
 
 class Struct:
