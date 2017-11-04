@@ -45,7 +45,7 @@ class RWBits:
     def __get__(self, obj, objtype=None):
         with obj.i2c_device as i2c:
             i2c.write(self.buffer, end=1, stop=False)
-            i2c.read_into(self.buffer, start=1)
+            i2c.readinto(self.buffer, start=1)
         return (self.buffer[1] & self.bit_mask) >> self.lowest_bit
 
     def __set__(self, obj, value):
@@ -54,7 +54,7 @@ class RWBits:
         value = (value << self.lowest_bit) | ~self.bit_mask
         with obj.i2c_device as i2c:
             i2c.write(self.buffer, end=1, stop=False)
-            i2c.read_into(self.buffer, start=1)
+            i2c.readinto(self.buffer, start=1)
             # Set all of our bits to 1.
             self.buffer[1] |= self.bit_mask
             # Set all 0 bits to 0 by anding together.

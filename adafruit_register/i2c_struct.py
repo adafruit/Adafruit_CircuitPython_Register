@@ -43,7 +43,7 @@ class Struct:
     def __get__(self, obj, objtype=None):
         with obj.i2c_device:
             obj.i2c_device.write(self.buffer, end=1, stop=False)
-            obj.i2c_device.read_into(self.buffer, start=1)
+            obj.i2c_device.readinto(self.buffer, start=1)
         return struct.unpack_from(self.format, memoryview(self.buffer)[1:])
 
     def __set__(self, obj, value):
@@ -69,7 +69,7 @@ class UnaryStruct:
     def __get__(self, obj, objtype=None):
         with obj.i2c_device:
             obj.i2c_device.write(self.buffer, end=1, stop=False)
-            obj.i2c_device.read_into(self.buffer, start=1)
+            obj.i2c_device.readinto(self.buffer, start=1)
         return struct.unpack_from(self.format, memoryview(self.buffer)[1:])[0]
 
     def __set__(self, obj, value):
