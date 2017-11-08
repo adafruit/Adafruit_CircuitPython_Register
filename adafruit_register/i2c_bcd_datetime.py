@@ -66,7 +66,7 @@ class BCDDateTimeRegister:
         # Read and return the date and time.
         with obj.i2c_device:
             obj.i2c_device.write(self.buffer, end=1, stop=False)
-            obj.i2c_device.read_into(self.buffer, start=1)
+            obj.i2c_device.readinto(self.buffer, start=1)
         return time.struct_time((_bcd2bin(self.buffer[7]) + 2000,
                                  _bcd2bin(self.buffer[6]),
                                  _bcd2bin(self.buffer[5 - self.weekday_offset]),
