@@ -19,6 +19,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+# pylint: disable=too-few-public-methods
+
+"""`i2c_bcd_alarm` - Binary Coded Decimal alarm register
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"""
+
+__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
 import time
 
@@ -66,7 +73,8 @@ class BCDAlarmTimeRegister:
     :param int register_address: The register address to start the read
     :param bool has_seconds: True if the alarm can happen minutely.
     :param bool weekday_shared: True if weekday and day share the same register
-    :param int weekday_start: 0 or 1 depending on the RTC's representation of the first day of the week (Monday)
+    :param int weekday_start: 0 or 1 depending on the RTC's representation of the first day of the
+      week (Monday)
     """
     # Defaults are based on alarm1 of the DS3231.
     def __init__(self, register_address, has_seconds=True, weekday_shared=True, weekday_start=1):

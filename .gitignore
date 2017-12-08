@@ -4,5 +4,6 @@ dist
 *.pyc
 _build/
 *.mpy
-build/
-
+.env
+build*
+bundles
