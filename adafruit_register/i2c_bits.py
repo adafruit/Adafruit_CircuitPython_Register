@@ -19,6 +19,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+# pylint: disable=too-few-public-methods
+
+"""`i2c_bits` - Multi bit registers
+++++++++++++++++++++++++++++++++"""
+
+__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
 class RWBits:
     """
@@ -33,7 +40,7 @@ class RWBits:
     """
     def __init__(self, num_bits, register_address, lowest_bit):
         self.bit_mask = 0
-        for i in range(num_bits):
+        for _ in range(num_bits):
             self.bit_mask = (self.bit_mask << 1) + 1
         self.bit_mask = self.bit_mask << lowest_bit
         if self.bit_mask >= (1 << 8):

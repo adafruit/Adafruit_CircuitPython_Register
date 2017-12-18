@@ -19,6 +19,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+# pylint: disable=too-few-public-methods
+
+"""`i2c_bcd_datetime` - Binary Coded Decimal date and time register
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"""
+
+__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
 import time
 
@@ -43,15 +50,18 @@ class BCDDateTimeRegister:
     """
     Date and time register using binary coded decimal structure.
 
-    The byte order of the register must* be: second, minute, hour, weekday, day (1-31), month, year (in years after 2000).
+    The byte order of the register must* be: second, minute, hour, weekday, day (1-31), month, year
+    (in years after 2000).
 
-    \* Setting weekday_first=False will flip the weekday/day order so that day comes first.
+    * Setting weekday_first=False will flip the weekday/day order so that day comes first.
 
     Values are `time.struct_time`
 
     :param int register_address: The register address to start the read
-    :param bool weekday_first: True if weekday is in a lower register than the day of the month (1-31)
-    :param int weekday_start: 0 or 1 depending on the RTC's representation of the first day of the week
+    :param bool weekday_first: True if weekday is in a lower register than the day of the month
+        (1-31)
+    :param int weekday_start: 0 or 1 depending on the RTC's representation of the first day of the
+        week
     """
     def __init__(self, register_address, weekday_first=True, weekday_start=1):
         self.buffer = bytearray(8)
@@ -73,7 +83,8 @@ class BCDDateTimeRegister:
                                  _bcd2bin(self.buffer[3]),
                                  _bcd2bin(self.buffer[2]),
                                  _bcd2bin(self.buffer[1] & 0x7F),
-                                 _bcd2bin(self.buffer[4 + self.weekday_offset] - self.weekday_start),
+                                 _bcd2bin(self.buffer[4 + self.weekday_offset] -
+                                          self.weekday_start),
                                  -1,
                                  -1))
 
