@@ -92,16 +92,16 @@ class StructArray:
         self.format = struct_format
         self.address = register_address
         self.count = count
-        self.id = "_structarray" + str(register_address)
+        self.array_id = "_structarray" + str(register_address)
 
     def __get__(self, obj, objtype=None):
         # We actually can't handle the indexing ourself due to data descriptor limits. So, we return
         # an object that can instead. This object is bound to the object passed in here by its
         # initializer and then cached on the object itself. That way its lifetime is tied to the
         # lifetime of the object itself.
-        if not hasattr(obj, self.id):
-            setattr(obj, self.id, _BoundStructArray(obj, self.address, self.format, self.count))
-        return getattr(obj, self.id)
+        if not hasattr(obj, self.array_id):
+            setattr(obj, self.array_id, _BoundStructArray(obj, self.address, self.format, self.count))
+        return getattr(obj, self.array_id)
 
     def __set__(self, obj, value):
         raise RuntimeError()
