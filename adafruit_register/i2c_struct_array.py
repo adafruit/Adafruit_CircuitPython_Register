@@ -100,7 +100,8 @@ class StructArray:
         # initializer and then cached on the object itself. That way its lifetime is tied to the
         # lifetime of the object itself.
         if not hasattr(obj, self.array_id):
-            setattr(obj, self.array_id, _BoundStructArray(obj, self.address, self.format, self.count))
+            setattr(obj, self.array_id,
+                    _BoundStructArray(obj, self.address, self.format, self.count))
         return getattr(obj, self.array_id)
 
     def __set__(self, obj, value):
