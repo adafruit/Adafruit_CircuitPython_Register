@@ -35,7 +35,7 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
 class _BoundStructArray:
     """
-    Actual array object that `StructArray` constructs on demand for
+    Array object that `StructArray` constructs on demand.
 
     :param object obj: The device object to bind to. It must have a `i2c_device` attribute
     :param int register_address: The register address to read the bit from
@@ -48,9 +48,9 @@ class _BoundStructArray:
         self.obj = obj
         self.count = count
 
-    def _header(self, index):
+    def _get_buffer(self, index):
         """Shared bounds checking and buffer creation."""
-        if index < 0 or index >= self.count:
+        if not 0 <= index < self.count:
             raise IndexError()
         size = struct.calcsize(self.format)
         # We create the buffer every time instead of keeping the buffer (which is 32 bytes at least)
@@ -60,14 +60,14 @@ class _BoundStructArray:
         return buf
 
     def __getitem__(self, index):
-        buf = self._header(index)
+        buf = self._get_buffer(index)
         with self.obj.i2c_device:
             self.obj.i2c_device.write(buf, end=1, stop=False)
             self.obj.i2c_device.readinto(buf, start=1)
         return struct.unpack_from(self.format, buf, offset=1)
 
     def __setitem__(self, index, value):
-        buf = self._header(index)
+        buf = self._get_buffer(index)
         struct.pack_into(self.format, buf, 1, *value)
         with self.obj.i2c_device:
             self.obj.i2c_device.write(buf)
@@ -84,6 +84,9 @@ class StructArray:
     Values are tuples that map to the values in the defined struct.  See struct
     module documentation for struct format string and its possible value types.
 
+    .. note:: This assumes the device addresses correspond to 8-bit bytes. This is not suitable for
+      devices with registers of other widths such as 16-bit.
+
     :param int register_address: The register address to begin reading the array from
     :param str struct_format: The struct format string for this register.
     :param int count: Number of elements in the array
@@ -92,7 +95,7 @@ class StructArray:
         self.format = struct_format
         self.address = register_address
         self.count = count
-        self.array_id = "_structarray" + str(register_address)
+        self.array_id = "_structarray{}".format(register_address)
 
     def __get__(self, obj, objtype=None):
         # We actually can't handle the indexing ourself due to data descriptor limits. So, we return
@@ -103,6 +106,3 @@ class StructArray:
             setattr(obj, self.array_id,
                     _BoundStructArray(obj, self.address, self.format, self.count))
         return getattr(obj, self.array_id)
-
-    def __set__(self, obj, value):
-        raise RuntimeError()
