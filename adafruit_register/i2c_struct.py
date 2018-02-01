@@ -71,16 +71,19 @@ class UnaryStruct:
     """
     def __init__(self, register_address, struct_format):
         self.format = struct_format
-        self.buffer = bytearray(1+struct.calcsize(self.format))
-        self.buffer[0] = register_address
+        self.address = register_address
 
     def __get__(self, obj, objtype=None):
+        buf = bytearray(1+struct.calcsize(self.format))
+        buf[0] = self.address
         with obj.i2c_device:
-            obj.i2c_device.write(self.buffer, end=1, stop=False)
-            obj.i2c_device.readinto(self.buffer, start=1)
-        return struct.unpack_from(self.format, memoryview(self.buffer)[1:])[0]
+            obj.i2c_device.write(buf, end=1, stop=False)
+            obj.i2c_device.readinto(buf, start=1)
+        return struct.unpack_from(self.format, buf, 1)[0]
 
     def __set__(self, obj, value):
-        struct.pack_into(self.format, self.buffer, 1, value)
+        buf = bytearray(1+struct.calcsize(self.format))
+        buf[0] = self.address
+        struct.pack_into(self.format, buf, 1, value)
         with obj.i2c_device:
-            obj.i2c_device.write(self.buffer)
+            obj.i2c_device.write(buf)
