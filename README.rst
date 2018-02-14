@@ -1,6 +1,14 @@
 Adafruit CircuitPython Register library
 =======================================
 
+.. image:: https://readthedocs.org/projects/adafruit-circuitpython-register/badge/?version=latest
+    :target: https://circuitpython.readthedocs.io/projects/register/en/latest/
+    :alt: Documentation Status
+
+.. image :: https://img.shields.io/discord/327254708534116352.svg
+    :target: https://discord.gg/nBQh6qu
+    :alt: Discord
+
 This library provides a variety of data descriptor class for `Adafruit
 CircuitPython <https://github.com/adafruit/circuitpython>`_ that makes it really
 simple to write a device drivers for a I2C and SPI register based devices. Data
