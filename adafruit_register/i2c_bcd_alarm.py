@@ -21,8 +21,14 @@
 # THE SOFTWARE.
 # pylint: disable=too-few-public-methods
 
-"""`i2c_bcd_alarm` - Binary Coded Decimal alarm register
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"""
+"""
+`adafruit_register.i2c_bcd_alarm`
+====================================================
+
+Binary Coded Decimal alarm register
+
+* Author(s): Scott Shawcroft
+"""
 
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
@@ -32,8 +38,7 @@ import time
 def _bcd2bin(value):
     """Convert binary coded decimal to Binary
 
-    Arguments:
-    value - the BCD value to convert to binary (required, no default)
+    :param value: the BCD value to convert to binary (required, no default)
     """
     return value - 6 * (value >> 4)
 
@@ -41,8 +46,7 @@ def _bcd2bin(value):
 def _bin2bcd(value):
     """Convert a binary value to binary coded decimal.
 
-    Arguments:
-    value - the binary value to convert to BCD. (required, no default)
+    :param value: the binary value to convert to BCD. (required, no default)
     """
     return value + 6 * (value // 10)
 
