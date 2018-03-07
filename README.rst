@@ -1,5 +1,6 @@
-Adafruit CircuitPython Register library
-=======================================
+
+Introduction
+============
 
 .. image:: https://readthedocs.org/projects/adafruit-circuitpython-register/badge/?version=latest
     :target: https://circuitpython.readthedocs.io/projects/register/en/latest/
@@ -9,19 +10,28 @@ Adafruit CircuitPython Register library
     :target: https://discord.gg/nBQh6qu
     :alt: Discord
 
+.. image:: https://travis-ci.org/adafruit/Adafruit_CircuitPython_Register.svg?branch=master
+    :target: https://travis-ci.org/adafruit/Adafruit_CircuitPython_Register
+    :alt: Build Status
+
 This library provides a variety of data descriptor class for `Adafruit
 CircuitPython <https://github.com/adafruit/circuitpython>`_ that makes it really
 simple to write a device drivers for a I2C and SPI register based devices. Data
 descriptors act like basic attributes from the outside which makes using them
 really easy to use.
 
-API
----
-.. toctree::
-    :maxdepth: 3
+Dependencies
+=============
+This driver depends on:
 
-    adafruit_register/index
+* `Adafruit CircuitPython <https://github.com/adafruit/circuitpython>`_
 
+Please ensure all dependencies are available on the CircuitPython filesystem.
+This is easily achieved by downloading
+`the Adafruit library and driver bundle <https://github.com/adafruit/Adafruit_CircuitPython_Bundle>`_.
+
+Usage Example
+=============
 
 Creating a driver
 -----------------
@@ -158,9 +168,59 @@ Thats it! Now you can use your new register class like the example above. Just
 remember to keep the number of members to a minimum because the class may be
 used a bunch of times.
 
-Indices and tables
-------------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+Contributing
+============
+
+Contributions are welcome! Please read our `Code of Conduct
+<https://github.com/adafruit/Adafruit_CircuitPython_Register/blob/master/CODE_OF_CONDUCT.md>`_
+before contributing to help this project stay welcoming.
+
+Building locally
+================
+
+To build this library locally you'll need to install the
+`circuitpython-build-tools <https://github.com/adafruit/circuitpython-build-tools>`_ package.
+
+.. code-block:: shell
+
+    python3 -m venv .env
+    source .env/bin/activate
+    pip install circuitpython-build-tools
+
+Once installed, make sure you are in the virtual environment:
+
+.. code-block:: shell
+
+    source .env/bin/activate
+
+Then run the build:
+
+.. code-block:: shell
+
+    circuitpython-build-bundles --filename_prefix adafruit-circuitpython-register --library_location .
+
+Sphinx documentation
+-----------------------
+
+Sphinx is used to build the documentation based on rST files and comments in the code. First,
+install dependencies (feel free to reuse the virtual environment from above):
+
+.. code-block:: shell
+
+    python3 -m venv .env
+    source .env/bin/activate
+    pip install Sphinx sphinx-rtd-theme
+
+Now, once you have the virtual environment activated:
+
+.. code-block:: shell
+
+    cd docs
+    sphinx-build -E -W -b html . _build/html
+
+This will output the documentation to ``docs/_build/html``. Open the index.html in your browser to
+view them. It will also (due to -W) error out on any warning like Travis will. This is a good way to
+locally verify it will pass.
+
+
