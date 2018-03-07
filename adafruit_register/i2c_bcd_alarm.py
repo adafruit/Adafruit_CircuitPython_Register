@@ -69,10 +69,10 @@ class BCDAlarmTimeRegister:
 
     * "secondly", once a second (only if alarm has_seconds)
     * "minutely", once a minute when seconds match (if alarm doesn't seconds then when seconds = 0)
-    * "hourly", once an hour when `tm_min` and `tm_sec` match
-    * "daily", once a day when `tm_hour`, `tm_min` and `tm_sec` match
-    * "weekly", once a week when `tm_wday`, `tm_hour`, `tm_min`, `tm_sec` match
-    * "monthly", once a month when `tm_mday`, `tm_hour`, `tm_min`, `tm_sec` match
+    * "hourly", once an hour when ``tm_min`` and ``tm_sec`` match
+    * "daily", once a day when ``tm_hour``, ``tm_min`` and ``tm_sec`` match
+    * "weekly", once a week when ``tm_wday``, ``tm_hour``, ``tm_min``, ``tm_sec`` match
+    * "monthly", once a month when ``tm_mday``, ``tm_hour``, ``tm_min``, ``tm_sec`` match
 
     :param int register_address: The register address to start the read
     :param bool has_seconds: True if the alarm can happen minutely.
