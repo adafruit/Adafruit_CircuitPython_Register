@@ -20,9 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 # pylint: disable=too-few-public-methods
+"""
+`adafruit_register.i2c_struct`
+====================================================
 
-"""`i2c_struct` - Generic structured registers based on `struct`
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Generic structured registers based on `struct`
+
+* Author(s): Scott Shawcroft
 """
 
 try:

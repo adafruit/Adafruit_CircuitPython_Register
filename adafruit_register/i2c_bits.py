@@ -20,9 +20,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 # pylint: disable=too-few-public-methods
+"""
+`adafruit_register.i2c_bits`
+====================================================
 
-"""`i2c_bits` - Multi bit registers
-++++++++++++++++++++++++++++++++"""
+Multi bit registers
+
+* Author(s): Scott Shawcroft
+"""
 
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
