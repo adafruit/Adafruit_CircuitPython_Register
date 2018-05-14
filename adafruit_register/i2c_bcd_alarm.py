@@ -147,6 +147,8 @@ class BCDAlarmTimeRegister:
         return (time.struct_time((2017, 1, mday, hour, minute, seconds, wday, mday, -1)), frequency)
 
     def __set__(self, obj, value):
+        if len(value) != 2:
+            raise ValueError("Value must be sequence of length two")
         # Turn all components off by default.
         for i in range(len(self.buffer) - 1):
             self.buffer[i + 1] = ALARM_COMPONENT_DISABLED
