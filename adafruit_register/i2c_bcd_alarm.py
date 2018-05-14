@@ -150,8 +150,15 @@ class BCDAlarmTimeRegister:
         # Turn all components off by default.
         for i in range(len(self.buffer) - 1):
             self.buffer[i + 1] = ALARM_COMPONENT_DISABLED
+        frequency_name = value[1]
+        error_message = "%s is not a supported frequency" % frequency_name
+        try:
+            frequency = FREQUENCY.index(frequency_name)
+        except ValueError:
+            raise ValueError(error_message)
 
-        frequency = FREQUENCY.index(value[1])
+        if frequency <= 1 and not self.has_seconds:
+            raise ValueError(error_message)
 
         # i is the index of the minute byte
         i = 2 if self.has_seconds else 1
