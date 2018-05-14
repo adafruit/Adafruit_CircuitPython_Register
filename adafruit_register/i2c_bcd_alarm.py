@@ -152,11 +152,10 @@ class BCDAlarmTimeRegister:
             self.buffer[i + 1] = ALARM_COMPONENT_DISABLED
         frequency_name = value[1]
         error_message = "%s is not a supported frequency" % frequency_name
-        try:
-            frequency = FREQUENCY.index(frequency_name)
-        except ValueError:
+        if frequency_name not in FREQUENCY:
             raise ValueError(error_message)
-
+            
+        frequency = FREQUENCY.index(frequency_name)
         if frequency <= 1 and not self.has_seconds:
             raise ValueError(error_message)
 
