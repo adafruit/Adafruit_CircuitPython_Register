@@ -147,11 +147,19 @@ class BCDAlarmTimeRegister:
         return (time.struct_time((2017, 1, mday, hour, minute, seconds, wday, mday, -1)), frequency)
 
     def __set__(self, obj, value):
+        if len(value) != 2:
+            raise ValueError("Value must be sequence of length two")
         # Turn all components off by default.
         for i in range(len(self.buffer) - 1):
             self.buffer[i + 1] = ALARM_COMPONENT_DISABLED
+        frequency_name = value[1]
+        error_message = "%s is not a supported frequency" % frequency_name
+        if frequency_name not in FREQUENCY:
+            raise ValueError(error_message)
 
-        frequency = FREQUENCY.index(value[1])
+        frequency = FREQUENCY.index(frequency_name)
+        if frequency <= 1 and not self.has_seconds:
+            raise ValueError(error_message)
 
         # i is the index of the minute byte
         i = 2 if self.has_seconds else 1
