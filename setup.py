@@ -25,13 +25,16 @@ setup(
 
     description='CircuitPython data descriptor classes to represent hardware registers on I2C and SPI devices.',
     long_description=long_description,
+    long_description_content_type='text/x-rst',
 
     # The project's main homepage.
     url='https://github.com/adafruit/Adafruit_CircuitPython_Register',
 
     # Author details
     author='Adafruit Industries',
-    author_email='support@adafruit.com',
+    author_email='circuitpython@adafruit.com',
+
+    install_requires=[],
 
     # Choose your license
     license='MIT',
