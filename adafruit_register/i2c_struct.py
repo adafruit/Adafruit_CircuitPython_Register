@@ -37,6 +37,7 @@ except ImportError:
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
+
 class Struct:
     """
     Arbitrary structure register that is readable and writeable.
@@ -62,6 +63,7 @@ class Struct:
         struct.pack_into(self.format, self.buffer, 1, *value)
         with obj.i2c_device:
             obj.i2c_device.write(self.buffer)
+
 
 class UnaryStruct:
     """
@@ -91,3 +93,17 @@ class UnaryStruct:
         struct.pack_into(self.format, buf, 1, value)
         with obj.i2c_device:
             obj.i2c_device.write(buf)
+
+
+class ROUnaryStruct(UnaryStruct):
+    """
+    Arbitrary single value structure register that is read-only.
+
+    Values map to the first value in the defined struct.  See struct
+    module documentation for struct format string and its possible value types.
+
+    :param int register_address: The register address to read the bit from
+    :param type struct_format: The struct format string for this register.
+    """
+    def __set__(self, obj, value):
+        raise AttributeError()
