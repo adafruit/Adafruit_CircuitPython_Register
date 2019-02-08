@@ -42,23 +42,25 @@ class RWBits:
     :param int num_bits: The number of bits in the field.
     :param int register_address: The register address to read the bit from
     :param type lowest_bit: The lowest bits index within the byte at ``register_address``
+    :param int register_width: The number of bytes in the register. Defaults to 1.
     """
-    def __init__(self, num_bits, register_address, lowest_bit):
+    def __init__(self, num_bits, register_address, lowest_bit, register_width=1):
         self.bit_mask = 0
         for _ in range(num_bits):
             self.bit_mask = (self.bit_mask << 1) + 1
         self.bit_mask = self.bit_mask << lowest_bit
         if self.bit_mask >= (1 << 8):
             raise ValueError()
-        self.buffer = bytearray(2)
+        self.buffer = bytearray(1 + register_width)
         self.buffer[0] = register_address
         self.lowest_bit = lowest_bit
+        self.byte = lowest_bit // 8 + 1
 
     def __get__(self, obj, objtype=None):
         with obj.i2c_device as i2c:
             i2c.write(self.buffer, end=1, stop=False)
             i2c.readinto(self.buffer, start=1)
-        return (self.buffer[1] & self.bit_mask) >> self.lowest_bit
+        return (self.buffer[self.byte] & self.bit_mask) >> self.lowest_bit
 
     def __set__(self, obj, value):
         # Shift the value to the appropriate spot and set all bits that aren't
@@ -68,9 +70,9 @@ class RWBits:
             i2c.write(self.buffer, end=1, stop=False)
             i2c.readinto(self.buffer, start=1)
             # Set all of our bits to 1.
-            self.buffer[1] |= self.bit_mask
+            self.buffer[self.byte] |= self.bit_mask
             # Set all 0 bits to 0 by anding together.
-            self.buffer[1] &= value
+            self.buffer[self.byte] &= value
             i2c.write(self.buffer)
 
 class ROBits(RWBits):
@@ -83,6 +85,7 @@ class ROBits(RWBits):
     :param int num_bits: The number of bits in the field.
     :param int register_address: The register address to read the bit from
     :param type lowest_bit: The lowest bits index within the byte at ``register_address``
+    :param int register_width: The number of bytes in the register. Defaults to 1.
     """
     def __set__(self, obj, value):
         raise AttributeError()
