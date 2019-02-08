@@ -40,26 +40,28 @@ class RWBit:
 
     :param int register_address: The register address to read the bit from
     :param type bit: The bit index within the byte at ``register_address``
+    :param int register_width: The number of bytes in the register. Defaults to 1.
     """
-    def __init__(self, register_address, bit):
+    def __init__(self, register_address, bit, register_width=1):
         self.bit_mask = 1 << bit
-        self.buffer = bytearray(2)
+        self.buffer = bytearray(1 + register_width)
         self.buffer[0] = register_address
+        self.byte = bit // 8 + 1
 
     def __get__(self, obj, objtype=None):
         with obj.i2c_device as i2c:
             i2c.write(self.buffer, end=1, stop=False)
             i2c.readinto(self.buffer, start=1)
-        return bool(self.buffer[1] & self.bit_mask)
+        return bool(self.buffer[self.byte] & self.bit_mask)
 
     def __set__(self, obj, value):
         with obj.i2c_device as i2c:
             i2c.write(self.buffer, end=1, stop=False)
             i2c.readinto(self.buffer, start=1)
             if value:
-                self.buffer[1] |= self.bit_mask
+                self.buffer[self.byte] |= self.bit_mask
             else:
-                self.buffer[1] &= ~self.bit_mask
+                self.buffer[self.byte] &= ~self.bit_mask
             i2c.write(self.buffer)
 
 class ROBit(RWBit):
@@ -68,6 +70,8 @@ class ROBit(RWBit):
     Values are `bool`
 
     :param int register_address: The register address to read the bit from
-    :param type bit: The bit index within the byte at ``register_address``"""
+    :param type bit: The bit index within the byte at ``register_address``
+    :param int register_width: The number of bytes in the register. Defaults to 1.
+    """
     def __set__(self, obj, value):
         raise AttributeError()
