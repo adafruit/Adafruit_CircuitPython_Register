@@ -43,10 +43,10 @@ class RWBit:
     :param int register_width: The number of bytes in the register. Defaults to 1.
     """
     def __init__(self, register_address, bit, register_width=1):
-        self.bit_mask = 1 << bit
+        self.bit_mask = 1 << (bit%8) # the bitmask *within* the byte!
         self.buffer = bytearray(1 + register_width)
         self.buffer[0] = register_address
-        self.byte = bit // 8 + 1
+        self.byte = bit // 8 + 1  # the byte number within the buffer
 
     def __get__(self, obj, objtype=None):
         with obj.i2c_device as i2c:
