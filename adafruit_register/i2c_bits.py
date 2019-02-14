@@ -70,7 +70,6 @@ class RWBits:
         with obj.i2c_device as i2c:
             i2c.write(self.buffer, end=1, stop=False)
             i2c.readinto(self.buffer, start=1)
-            
             # Set all of our bits to 1.
             self.buffer[self.byte] |= self.bit_mask
             # Set all 0 bits to 0 by anding together.
