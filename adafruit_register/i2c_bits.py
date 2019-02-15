@@ -48,12 +48,13 @@ class RWBits:
         self.bit_mask = 0
         for _ in range(num_bits):
             self.bit_mask = (self.bit_mask << 1) + 1
-        self.bit_mask = self.bit_mask << lowest_bit
-        if self.bit_mask >= (1 << 8):
-            raise ValueError()
+        self.bit_mask = self.bit_mask << (lowest_bit%8)
+        if self.bit_mask >= 0xFF:
+            raise ValueError("Cannot have more bits than fit in a single byte")
+
         self.buffer = bytearray(1 + register_width)
         self.buffer[0] = register_address
-        self.lowest_bit = lowest_bit
+        self.lowest_bit = lowest_bit % 8  # lowest bit within byte
         self.byte = lowest_bit // 8 + 1
 
     def __get__(self, obj, objtype=None):
