@@ -54,15 +54,15 @@ class Struct:
         self.buffer[0] = register_address
 
     def __get__(self, obj, objtype=None):
-        with obj.i2c_device:
-            obj.i2c_device.write(self.buffer, end=1, stop=False)
-            obj.i2c_device.readinto(self.buffer, start=1)
+        with obj.i2c_device as i2c:
+            i2c.write_then_readinto(self.buffer, self.buffer,
+                                    out_end=1, in_start=1, stop=False)
         return struct.unpack_from(self.format, memoryview(self.buffer)[1:])
 
     def __set__(self, obj, value):
         struct.pack_into(self.format, self.buffer, 1, *value)
-        with obj.i2c_device:
-            obj.i2c_device.write(self.buffer)
+        with obj.i2c_device as i2c:
+            i2c.write(self.buffer)
 
 
 class UnaryStruct:
@@ -82,17 +82,17 @@ class UnaryStruct:
     def __get__(self, obj, objtype=None):
         buf = bytearray(1+struct.calcsize(self.format))
         buf[0] = self.address
-        with obj.i2c_device:
-            obj.i2c_device.write(buf, end=1, stop=False)
-            obj.i2c_device.readinto(buf, start=1)
+        with obj.i2c_device as i2c:
+            i2c.write_then_readinto(buf, buf,
+                                    out_end=1, in_start=1, stop=False)
         return struct.unpack_from(self.format, buf, 1)[0]
 
     def __set__(self, obj, value):
         buf = bytearray(1+struct.calcsize(self.format))
         buf[0] = self.address
         struct.pack_into(self.format, buf, 1, value)
-        with obj.i2c_device:
-            obj.i2c_device.write(buf)
+        with obj.i2c_device as i2c:
+            i2c.write(buf)
 
 
 class ROUnaryStruct(UnaryStruct):
