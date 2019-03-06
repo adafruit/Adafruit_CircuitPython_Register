@@ -43,8 +43,10 @@ class RWBits:
     :param int register_address: The register address to read the bit from
     :param type lowest_bit: The lowest bits index within the byte at ``register_address``
     :param int register_width: The number of bytes in the register. Defaults to 1.
+    :param bool lsb_first: Is the first byte we read from I2C the LSB? Defaults to true
     """
-    def __init__(self, num_bits, register_address, lowest_bit, register_width=1):
+    def __init__(self, num_bits, register_address, lowest_bit, # pylint: disable=too-many-arguments
+                 register_width=1, lsb_first=True):
         self.bit_mask = ((1 << num_bits)-1)  << lowest_bit
         #print("bitmask: ",hex(self.bit_mask))
         if self.bit_mask >= 1 << (register_width*8):
@@ -52,6 +54,7 @@ class RWBits:
         self.lowest_bit = lowest_bit
         self.buffer = bytearray(1 + register_width)
         self.buffer[0] = register_address
+        self.lsb_first = lsb_first
 
     def __get__(self, obj, objtype=None):
         with obj.i2c_device as i2c:
@@ -59,7 +62,10 @@ class RWBits:
                                     out_end=1, in_start=1, stop=False)
         # read the number of bytes into a single variable
         reg = 0
-        for i in range(len(self.buffer)-1, 0, -1):
+        order = range(len(self.buffer)-1, 0, -1)
+        if not self.lsb_first:
+            order = reversed(order)
+        for i in order:
             reg = (reg << 8) | self.buffer[i]
         return (reg & self.bit_mask) >> self.lowest_bit
 
@@ -69,13 +75,16 @@ class RWBits:
             i2c.write_then_readinto(self.buffer, self.buffer,
                                     out_end=1, in_start=1, stop=False)
             reg = 0
-            for i in range(len(self.buffer)-1, 0, -1):
+            order = range(len(self.buffer)-1, 0, -1)
+            if not self.lsb_first:
+                order = range(1, len(self.buffer))
+            for i in order:
                 reg = (reg << 8) | self.buffer[i]
             #print("old reg: ", hex(reg))
             reg &= ~self.bit_mask  # mask off the bits we're about to change
             reg |= value           # then or in our new value
             #print("new reg: ", hex(reg))
-            for i in range(1, len(self.buffer)):
+            for i in reversed(order):
                 self.buffer[i] = reg & 0xFF
                 reg >>= 8
             i2c.write(self.buffer)
