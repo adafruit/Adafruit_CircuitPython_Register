@@ -41,7 +41,8 @@ class RWBit:
     :param int register_address: The register address to read the bit from
     :param type bit: The bit index within the byte at ``register_address``
     :param int register_width: The number of bytes in the register. Defaults to 1.
-    :param lsb_first Is the first byte we read from I2C the LSB? Defaults to true
+    :param bool lsb_first: Is the first byte we read from I2C the LSB? Defaults to true
+
     """
     def __init__(self, register_address, bit, register_width=1, lsb_first=True):
         self.bit_mask = 1 << (bit%8) # the bitmask *within* the byte!
@@ -76,6 +77,7 @@ class ROBit(RWBit):
     :param int register_address: The register address to read the bit from
     :param type bit: The bit index within the byte at ``register_address``
     :param int register_width: The number of bytes in the register. Defaults to 1.
+
     """
     def __set__(self, obj, value):
         raise AttributeError()

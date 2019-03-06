@@ -43,7 +43,7 @@ class RWBits:
     :param int register_address: The register address to read the bit from
     :param type lowest_bit: The lowest bits index within the byte at ``register_address``
     :param int register_width: The number of bytes in the register. Defaults to 1.
-    :param lsb_first Is the first byte we read from I2C the LSB? Defaults to true
+    :param bool lsb_first: Is the first byte we read from I2C the LSB? Defaults to true
     """
     def __init__(self, num_bits, register_address, lowest_bit, # pylint: disable=too-many-arguments
                  register_width=1, lsb_first=True):
