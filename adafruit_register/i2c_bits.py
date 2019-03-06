@@ -45,7 +45,8 @@ class RWBits:
     :param int register_width: The number of bytes in the register. Defaults to 1.
     :param lsb_first Is the first byte we read from I2C the LSB? Defaults to true
     """
-    def __init__(self, num_bits, register_address, lowest_bit, register_width=1, lsb_first=True):
+    def __init__(self, num_bits, register_address, lowest_bit,
+                 register_width=1, lsb_first=True): # pylint: disable=too-many-arguments
         self.bit_mask = ((1 << num_bits)-1)  << lowest_bit
         #print("bitmask: ",hex(self.bit_mask))
         if self.bit_mask >= 1 << (register_width*8):
