@@ -3,18 +3,18 @@ Simple tests
 
 Ensure your device works with this simple test.
 
-.. literalinclude:: ../examples/rwbit.py
-    :caption: examples/rwbit.py
+.. literalinclude:: ../examples/register_rwbit.py
+    :caption: examples/register_rwbit.py
     :linenos:
 
-.. literalinclude:: ../examples/rwbits.py
-    :caption: examples/rwbits.py
+.. literalinclude:: ../examples/register_rwbits.py
+    :caption: examples/register_rwbits.py
     :linenos:
 
-.. literalinclude:: ../examples/struct.py
-    :caption: examples/struct.py
+.. literalinclude:: ../examples/register_struct.py
+    :caption: examples/register_struct.py
     :linenos:
 
-.. literalinclude:: ../examples/unarystruct.py
-    :caption: examples/unarystruct.py
+.. literalinclude:: ../examples/register_unarystruct.py
+    :caption: examples/register_unarystruct.py
     :linenos:
