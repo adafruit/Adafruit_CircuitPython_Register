@@ -29,10 +29,7 @@ Array of structured registers based on `struct`
 * Author(s): Scott Shawcroft
 """
 
-try:
-    import struct
-except ImportError:
-    import ustruct as struct
+import struct
 
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
@@ -67,7 +64,7 @@ class _BoundStructArray:
         buf = self._get_buffer(index)
         with self.obj.i2c_device as i2c:
             i2c.write_then_readinto(buf, buf,
-                                    out_end=1, in_start=1, stop=False)
+                                    out_end=1, in_start=1)
         return struct.unpack_from(self.format, buf, 1)  # offset=1
 
     def __setitem__(self, index, value):

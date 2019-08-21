@@ -136,15 +136,13 @@ we must implement ``__get__`` and ``__set__``.
 .. code-block:: python
 
     def __get__(self, obj, objtype=None):
-        with obj.i2c_device:
-            obj.i2c_device.write(self.buffer, end=1, stop=False)
-            obj.i2c_device.readinto(self.buffer, start=1)
+        with obj.i2c_device as i2c:
+            i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
         return bool(self.buffer[1] & self.bit_mask)
 
     def __set__(self, obj, value):
-        with obj.i2c_device:
-            obj.i2c_device.write(self.buffer, end=1, stop=False)
-            obj.i2c_device.readinto(self.buffer, start=1)
+        with obj.i2c_device as i2c:
+            i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
             if value:
                 self.buffer[1] |= self.bit_mask
             else:
