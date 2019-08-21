@@ -95,7 +95,7 @@ class BCDAlarmTimeRegister:
 
     def __get__(self, obj, objtype=None):
         # Read the alarm register.
-        with obj.i2c_device:
+        with obj.i2c_device as i2c:
             i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
 
         frequency = None
