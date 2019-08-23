@@ -55,8 +55,7 @@ class Struct:
 
     def __get__(self, obj, objtype=None):
         with obj.i2c_device as i2c:
-            i2c.write_then_readinto(self.buffer, self.buffer,
-                                    out_end=1, in_start=1, stop=False)
+            i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
         return struct.unpack_from(self.format, memoryview(self.buffer)[1:])
 
     def __set__(self, obj, value):
@@ -83,8 +82,7 @@ class UnaryStruct:
         buf = bytearray(1+struct.calcsize(self.format))
         buf[0] = self.address
         with obj.i2c_device as i2c:
-            i2c.write_then_readinto(buf, buf,
-                                    out_end=1, in_start=1, stop=False)
+            i2c.write_then_readinto(buf, buf, out_end=1, in_start=1)
         return struct.unpack_from(self.format, buf, 1)[0]
 
     def __set__(self, obj, value):

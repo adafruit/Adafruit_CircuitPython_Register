@@ -58,8 +58,7 @@ class RWBits:
 
     def __get__(self, obj, objtype=None):
         with obj.i2c_device as i2c:
-            i2c.write_then_readinto(self.buffer, self.buffer,
-                                    out_end=1, in_start=1, stop=False)
+            i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
         # read the number of bytes into a single variable
         reg = 0
         order = range(len(self.buffer)-1, 0, -1)
@@ -72,8 +71,7 @@ class RWBits:
     def __set__(self, obj, value):
         value <<= self.lowest_bit    # shift the value over to the right spot
         with obj.i2c_device as i2c:
-            i2c.write_then_readinto(self.buffer, self.buffer,
-                                    out_end=1, in_start=1, stop=False)
+            i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
             reg = 0
             order = range(len(self.buffer)-1, 0, -1)
             if not self.lsb_first:
