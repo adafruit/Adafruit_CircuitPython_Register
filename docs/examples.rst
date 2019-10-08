@@ -11,8 +11,8 @@ Ensure your device works with this simple test.
     :caption: examples/register_rwbits.py
     :linenos:
 
-.. literalinclude:: ../examples/register_struct.py
-    :caption: examples/register_struct.py
+.. literalinclude:: ../examples/register_simpletest.py
+    :caption: examples/register_simpletest.py
     :linenos:
 
 .. literalinclude:: ../examples/register_unarystruct.py
