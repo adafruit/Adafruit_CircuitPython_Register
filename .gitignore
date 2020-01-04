@@ -5,5 +5,4 @@ dist
 _build/
 *.mpy
 .env
-build*
 bundles
