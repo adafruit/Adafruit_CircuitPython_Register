@@ -32,6 +32,7 @@ Multi bit registers
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
+
 class RWBits:
     """
     Multibit register (less than a full byte) that is readable and writeable.
@@ -45,11 +46,13 @@ class RWBits:
     :param int register_width: The number of bytes in the register. Defaults to 1.
     :param bool lsb_first: Is the first byte we read from I2C the LSB? Defaults to true
     """
-    def __init__(self, num_bits, register_address, lowest_bit, # pylint: disable=too-many-arguments
-                 register_width=1, lsb_first=True):
-        self.bit_mask = ((1 << num_bits)-1)  << lowest_bit
-        #print("bitmask: ",hex(self.bit_mask))
-        if self.bit_mask >= 1 << (register_width*8):
+
+    def __init__(  # pylint: disable=too-many-arguments
+        self, num_bits, register_address, lowest_bit, register_width=1, lsb_first=True,
+    ):
+        self.bit_mask = ((1 << num_bits) - 1) << lowest_bit
+        # print("bitmask: ",hex(self.bit_mask))
+        if self.bit_mask >= 1 << (register_width * 8):
             raise ValueError("Cannot have more bits than register size")
         self.lowest_bit = lowest_bit
         self.buffer = bytearray(1 + register_width)
@@ -61,7 +64,7 @@ class RWBits:
             i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
         # read the number of bytes into a single variable
         reg = 0
-        order = range(len(self.buffer)-1, 0, -1)
+        order = range(len(self.buffer) - 1, 0, -1)
         if not self.lsb_first:
             order = reversed(order)
         for i in order:
@@ -69,23 +72,24 @@ class RWBits:
         return (reg & self.bit_mask) >> self.lowest_bit
 
     def __set__(self, obj, value):
-        value <<= self.lowest_bit    # shift the value over to the right spot
+        value <<= self.lowest_bit  # shift the value over to the right spot
         with obj.i2c_device as i2c:
             i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
             reg = 0
-            order = range(len(self.buffer)-1, 0, -1)
+            order = range(len(self.buffer) - 1, 0, -1)
             if not self.lsb_first:
                 order = range(1, len(self.buffer))
             for i in order:
                 reg = (reg << 8) | self.buffer[i]
-            #print("old reg: ", hex(reg))
+            # print("old reg: ", hex(reg))
             reg &= ~self.bit_mask  # mask off the bits we're about to change
-            reg |= value           # then or in our new value
-            #print("new reg: ", hex(reg))
+            reg |= value  # then or in our new value
+            # print("new reg: ", hex(reg))
             for i in reversed(order):
                 self.buffer[i] = reg & 0xFF
                 reg >>= 8
             i2c.write(self.buffer)
+
 
 class ROBits(RWBits):
     """
@@ -99,5 +103,6 @@ class ROBits(RWBits):
     :param type lowest_bit: The lowest bits index within the byte at ``register_address``
     :param int register_width: The number of bytes in the register. Defaults to 1.
     """
+
     def __set__(self, obj, value):
         raise AttributeError()
