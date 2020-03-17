@@ -34,6 +34,7 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
 import time
 
+
 def _bcd2bin(value):
     """Convert binary coded decimal to Binary
 
@@ -48,6 +49,7 @@ def _bin2bcd(value):
     :param value: the binary value to convert to BCD. (required, no default)
     """
     return value + 6 * (value // 10)
+
 
 class BCDDateTimeRegister:
     """
@@ -66,6 +68,7 @@ class BCDDateTimeRegister:
     :param int weekday_start: 0 or 1 depending on the RTC's representation of the first day of the
         week
     """
+
     def __init__(self, register_address, weekday_first=True, weekday_start=1):
         self.buffer = bytearray(8)
         self.buffer[0] = register_address
@@ -79,22 +82,27 @@ class BCDDateTimeRegister:
         # Read and return the date and time.
         with obj.i2c_device as i2c:
             i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
-        return time.struct_time((_bcd2bin(self.buffer[7]) + 2000,
-                                 _bcd2bin(self.buffer[6]),
-                                 _bcd2bin(self.buffer[5 - self.weekday_offset]),
-                                 _bcd2bin(self.buffer[3]),
-                                 _bcd2bin(self.buffer[2]),
-                                 _bcd2bin(self.buffer[1] & 0x7F),
-                                 _bcd2bin(self.buffer[4 + self.weekday_offset] -
-                                          self.weekday_start),
-                                 -1,
-                                 -1))
+        return time.struct_time(
+            (
+                _bcd2bin(self.buffer[7]) + 2000,
+                _bcd2bin(self.buffer[6]),
+                _bcd2bin(self.buffer[5 - self.weekday_offset]),
+                _bcd2bin(self.buffer[3]),
+                _bcd2bin(self.buffer[2]),
+                _bcd2bin(self.buffer[1] & 0x7F),
+                _bcd2bin(self.buffer[4 + self.weekday_offset] - self.weekday_start),
+                -1,
+                -1,
+            )
+        )
 
     def __set__(self, obj, value):
-        self.buffer[1] = _bin2bcd(value.tm_sec) & 0x7F   # format conversions
+        self.buffer[1] = _bin2bcd(value.tm_sec) & 0x7F  # format conversions
         self.buffer[2] = _bin2bcd(value.tm_min)
         self.buffer[3] = _bin2bcd(value.tm_hour)
-        self.buffer[4 + self.weekday_offset] = _bin2bcd(value.tm_wday + self.weekday_start)
+        self.buffer[4 + self.weekday_offset] = _bin2bcd(
+            value.tm_wday + self.weekday_start
+        )
         self.buffer[5 - self.weekday_offset] = _bin2bcd(value.tm_mday)
         self.buffer[6] = _bin2bcd(value.tm_mon)
         self.buffer[7] = _bin2bcd(value.tm_year - 2000)
