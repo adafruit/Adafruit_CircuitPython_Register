@@ -55,14 +55,14 @@ class RWBit:
 
     def __get__(self, obj, objtype=None):
         with obj.spi_device as spi:
-            spi.write(self.buffer,end=2)
-            spi.readinto(self.buffer,start=1)
+            spi.write(self.buffer, end=2)
+            spi.readinto(self.buffer, start=1)
         return bool(self.buffer[self.byte] & self.bit_mask)
 
     def __set__(self, obj, value):
         with obj.spi_device as spi:
-            spi.write(self.buffer,end=2)
-            spi.readinto(self.buffer,start=1)
+            spi.write(self.buffer, end=2)
+            spi.readinto(self.buffer, start=1)
             if value:
                 self.buffer[self.byte] |= self.bit_mask
             else:
