@@ -58,8 +58,8 @@ class RWBits:
 
     def __get__(self, obj, objtype=None):
         with obj.spi_device as spi:
-            spi.write(self.buffer,end=2)
-            spi.readinto(self.buffer,start=1)
+            spi.write(self.buffer, end=2)
+            spi.readinto(self.buffer, start=1)
         # read the number of bytes into a single variable
         reg = 0
         order = range(len(self.buffer)-1, 0, -1)
@@ -72,8 +72,8 @@ class RWBits:
     def __set__(self, obj, value):
         value <<= self.lowest_bit    # shift the value over to the right spot
         with obj.spi_device as spi:
-            spi.write(self.buffer,end=2)
-            spi.readinto(self.buffer,start=1)
+            spi.write(self.buffer, end=2)
+            spi.readinto(self.buffer, start=1)
             reg = 0
             order = range(len(self.buffer)-1, 0, -1)
             if not self.lsb_first:
