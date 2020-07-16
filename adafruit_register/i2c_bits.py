@@ -45,7 +45,8 @@ class RWBits:
     :param type lowest_bit: The lowest bits index within the byte at ``register_address``
     :param int register_width: The number of bytes in the register. Defaults to 1.
     :param bool lsb_first: Is the first byte we read from I2C the LSB? Defaults to true
-    :param bool signed: If True, the value is a "two's complement" signed value.  If False, it is unsigned.
+    :param bool signed: If True, the value is a "two's complement" signed value.
+                        If False, it is unsigned.
     """
 
     def __init__(  # pylint: disable=too-many-arguments
