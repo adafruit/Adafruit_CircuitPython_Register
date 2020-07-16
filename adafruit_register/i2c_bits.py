@@ -45,10 +45,11 @@ class RWBits:
     :param type lowest_bit: The lowest bits index within the byte at ``register_address``
     :param int register_width: The number of bytes in the register. Defaults to 1.
     :param bool lsb_first: Is the first byte we read from I2C the LSB? Defaults to true
+    :param bool signed: If True, the value is a "two's complement" signed value.  If False, it is unsigned.
     """
 
     def __init__(  # pylint: disable=too-many-arguments
-        self, num_bits, register_address, lowest_bit, register_width=1, lsb_first=True,
+        self, num_bits, register_address, lowest_bit, register_width=1, lsb_first=True, signed=False
     ):
         self.bit_mask = ((1 << num_bits) - 1) << lowest_bit
         # print("bitmask: ",hex(self.bit_mask))
@@ -58,6 +59,7 @@ class RWBits:
         self.buffer = bytearray(1 + register_width)
         self.buffer[0] = register_address
         self.lsb_first = lsb_first
+        self.sign_bit = (1 << (num_bits-1)) if signed else 0
 
     def __get__(self, obj, objtype=None):
         with obj.i2c_device as i2c:
@@ -69,7 +71,11 @@ class RWBits:
             order = reversed(order)
         for i in order:
             reg = (reg << 8) | self.buffer[i]
-        return (reg & self.bit_mask) >> self.lowest_bit
+        reg = (reg & self.bit_mask) >> self.lowest_bit
+        # If the value is signed and negative, convert it
+        if reg & self.sign_bit:
+            reg -= 2*self.sign_bit
+        return reg
 
     def __set__(self, obj, value):
         value <<= self.lowest_bit  # shift the value over to the right spot
