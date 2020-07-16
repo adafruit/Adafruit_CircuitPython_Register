@@ -49,7 +49,13 @@ class RWBits:
     """
 
     def __init__(  # pylint: disable=too-many-arguments
-        self, num_bits, register_address, lowest_bit, register_width=1, lsb_first=True, signed=False
+        self,
+        num_bits,
+        register_address,
+        lowest_bit,
+        register_width=1,
+        lsb_first=True,
+        signed=False,
     ):
         self.bit_mask = ((1 << num_bits) - 1) << lowest_bit
         # print("bitmask: ",hex(self.bit_mask))
@@ -59,7 +65,7 @@ class RWBits:
         self.buffer = bytearray(1 + register_width)
         self.buffer[0] = register_address
         self.lsb_first = lsb_first
-        self.sign_bit = (1 << (num_bits-1)) if signed else 0
+        self.sign_bit = (1 << (num_bits - 1)) if signed else 0
 
     def __get__(self, obj, objtype=None):
         with obj.i2c_device as i2c:
@@ -74,7 +80,7 @@ class RWBits:
         reg = (reg & self.bit_mask) >> self.lowest_bit
         # If the value is signed and negative, convert it
         if reg & self.sign_bit:
-            reg -= 2*self.sign_bit
+            reg -= 2 * self.sign_bit
         return reg
 
     def __set__(self, obj, value):
