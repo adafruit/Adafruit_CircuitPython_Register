@@ -77,6 +77,8 @@ class BCDDateTimeRegister:
         else:
             self.weekday_offset = 1
         self.weekday_start = weekday_start
+                             #n/a   sec   min   hour  days  wkday  mon  year
+        self.mask_datetime = [0xFF, 0x7F, 0x7F, 0x3F, 0x3F, 0x07, 0x1F, 0xFF]
 
     def __get__(self, obj, objtype=None):
         # Read and return the date and time.
@@ -84,13 +86,13 @@ class BCDDateTimeRegister:
             i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
         return time.struct_time(
             (
-                _bcd2bin(self.buffer[7]) + 2000,
-                _bcd2bin(self.buffer[6]),
-                _bcd2bin(self.buffer[5 - self.weekday_offset]),
-                _bcd2bin(self.buffer[3]),
-                _bcd2bin(self.buffer[2]),
-                _bcd2bin(self.buffer[1] & 0x7F),
-                _bcd2bin(self.buffer[4 + self.weekday_offset] - self.weekday_start),
+                _bcd2bin(self.buffer[7] & self.mask_datetime[7]) + 2000,
+                _bcd2bin(self.buffer[6] & self.mask_datetime[6]),
+                _bcd2bin(self.buffer[5 - self.weekday_offset] & self.mask_datetime[5]),
+                _bcd2bin(self.buffer[3] & self.mask_datetime[3]),
+                _bcd2bin(self.buffer[2] & self.mask_datetime[2]),
+                _bcd2bin(self.buffer[1] & self.mask_datetime[1]),
+                _bcd2bin(self.buffer[4 + self.weekday_offset] & self.mask_datetime[4] - self.weekday_start),
                 -1,
                 -1,
             )
