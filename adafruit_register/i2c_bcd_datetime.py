@@ -77,7 +77,7 @@ class BCDDateTimeRegister:
         else:
             self.weekday_offset = 1
         self.weekday_start = weekday_start
-                             #n/a   sec   min   hour  days  wkday  mon  year
+        # Masking value list  n/a   sec   min   hour  days  wkday  mon  year
         self.mask_datetime = [0xFF, 0x7F, 0x7F, 0x3F, 0x3F, 0x07, 0x1F, 0xFF]
 
     def __get__(self, obj, objtype=None):
@@ -92,7 +92,10 @@ class BCDDateTimeRegister:
                 _bcd2bin(self.buffer[3] & self.mask_datetime[3]),
                 _bcd2bin(self.buffer[2] & self.mask_datetime[2]),
                 _bcd2bin(self.buffer[1] & self.mask_datetime[1]),
-                _bcd2bin(self.buffer[4 + self.weekday_offset] & self.mask_datetime[4] - self.weekday_start),
+                _bcd2bin(
+                    self.buffer[4 + self.weekday_offset]
+                    & self.mask_datetime[4] - self.weekday_start
+                ),
                 -1,
                 -1,
             )
