@@ -77,8 +77,8 @@ class BCDDateTimeRegister:
         else:
             self.weekday_offset = 1
         self.weekday_start = weekday_start
-        # Masking value list  n/a   sec   min   hour  days  wkday  mon  year
-        self.mask_datetime = [0xFF, 0x7F, 0x7F, 0x3F, 0x3F, 0x07, 0x1F, 0xFF]
+        # Masking value list   n/a  sec min hr day wkday mon year
+        self.mask_datetime = b"\xFF\x7F\x7F\x3F\x3F\x07\x1F\xFF"
 
     def __get__(self, obj, objtype=None):
         # Read and return the date and time.
