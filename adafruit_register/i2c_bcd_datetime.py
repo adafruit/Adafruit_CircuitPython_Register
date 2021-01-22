@@ -76,8 +76,11 @@ class BCDDateTimeRegister:
                 _bcd2bin(self.buffer[2] & self.mask_datetime[2]),
                 _bcd2bin(self.buffer[1] & self.mask_datetime[1]),
                 _bcd2bin(
-                    self.buffer[4 + self.weekday_offset]
-                    & self.mask_datetime[5] - self.weekday_start
+                    (
+                        self.buffer[4 + self.weekday_offset]
+                        & self.mask_datetime[5]
+                    ) 
+                    - self.weekday_start
                 ),
                 -1,
                 -1,
