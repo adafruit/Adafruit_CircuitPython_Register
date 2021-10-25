@@ -192,6 +192,11 @@ remember to keep the number of members to a minimum because the class may be
 used a bunch of times.
 
 
+Documentation
+=============
+
+API documentation for this library can be found on `Read the Docs <https://circuitpython.readthedocs.io/projects/register/en/latest/>`_.
+
 Contributing
 ============
 
