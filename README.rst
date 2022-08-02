@@ -14,6 +14,10 @@ Introduction
     :target: https://github.com/adafruit/Adafruit_CircuitPython_Register/actions/
     :alt: Build Status
 
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/psf/black
+    :alt: Code Style: Black
+
 This library provides a variety of data descriptor class for `Adafruit
 CircuitPython <https://github.com/adafruit/circuitpython>`_ that makes it really
 simple to write a device drivers for a I2C and SPI register based devices. Data
