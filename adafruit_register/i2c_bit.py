@@ -12,7 +12,7 @@ Single bit registers
 * Author(s): Scott Shawcroft
 """
 
-__version__ = "0.0.0-auto.0"
+__version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
 
