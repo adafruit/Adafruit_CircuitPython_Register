@@ -17,8 +17,19 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
 import time
 
+try:
+    from typing import Optional, Type, Tuple
+    from typing_extensions import Literal
+    from circuitpython_typing.device_drivers import I2CDeviceDriver
 
-def _bcd2bin(value):
+    FREQUENCY_T = Literal[
+        "monthly", "weekly", "daily", "hourly", "secondly", "minutely"
+    ]
+except ImportError:
+    pass
+
+
+def _bcd2bin(value: int) -> int:
     """Convert binary coded decimal to Binary
 
     :param value: the BCD value to convert to binary (required, no default)
@@ -26,7 +37,7 @@ def _bcd2bin(value):
     return value - 6 * (value >> 4)
 
 
-def _bin2bcd(value):
+def _bin2bcd(value: int) -> int:
     """Convert a binary value to binary coded decimal.
 
     :param value: the binary value to convert to BCD. (required, no default)
@@ -68,8 +79,12 @@ class BCDAlarmTimeRegister:
 
     # Defaults are based on alarm1 of the DS3231.
     def __init__(
-        self, register_address, has_seconds=True, weekday_shared=True, weekday_start=1
-    ):
+        self,
+        register_address: int,
+        has_seconds: bool = True,
+        weekday_shared: bool = True,
+        weekday_start: Literal[0, 1] = 1,
+    ) -> None:
         buffer_size = 5
         if weekday_shared:
             buffer_size -= 1
@@ -81,7 +96,11 @@ class BCDAlarmTimeRegister:
         self.weekday_shared = weekday_shared
         self.weekday_start = weekday_start
 
-    def __get__(self, obj, objtype=None):
+    def __get__(
+        self,
+        obj: Optional[I2CDeviceDriver],
+        objtype: Optional[Type[I2CDeviceDriver]] = None,
+    ) -> Tuple[time.struct_time, FREQUENCY_T]:
         # Read the alarm register.
         with obj.i2c_device as i2c:
             i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
@@ -136,7 +155,9 @@ class BCDAlarmTimeRegister:
             frequency,
         )
 
-    def __set__(self, obj, value):
+    def __set__(
+        self, obj: I2CDeviceDriver, value: Tuple[time.struct_time, FREQUENCY_T]
+    ) -> None:
         if len(value) != 2:
             raise ValueError("Value must be sequence of length two")
         # Turn all components off by default.

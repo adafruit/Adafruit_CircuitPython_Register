@@ -15,6 +15,12 @@ Multi bit registers
 __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
+try:
+    from typing import Optional, Type, NoReturn
+    from circuitpython_typing.device_drivers import I2CDeviceDriver
+except ImportError:
+    pass
+
 
 class RWBits:
     """
@@ -25,7 +31,7 @@ class RWBits:
 
     :param int num_bits: The number of bits in the field.
     :param int register_address: The register address to read the bit from
-    :param type lowest_bit: The lowest bits index within the byte at ``register_address``
+    :param int lowest_bit: The lowest bits index within the byte at ``register_address``
     :param int register_width: The number of bytes in the register. Defaults to 1.
     :param bool lsb_first: Is the first byte we read from I2C the LSB? Defaults to true
     :param bool signed: If True, the value is a "two's complement" signed value.
@@ -34,13 +40,13 @@ class RWBits:
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        num_bits,
-        register_address,
-        lowest_bit,
-        register_width=1,
-        lsb_first=True,
-        signed=False,
-    ):
+        num_bits: int,
+        register_address: int,
+        lowest_bit: int,
+        register_width: int = 1,
+        lsb_first: bool = True,
+        signed: bool = False,
+    ) -> None:
         self.bit_mask = ((1 << num_bits) - 1) << lowest_bit
         # print("bitmask: ",hex(self.bit_mask))
         if self.bit_mask >= 1 << (register_width * 8):
@@ -51,7 +57,11 @@ class RWBits:
         self.lsb_first = lsb_first
         self.sign_bit = (1 << (num_bits - 1)) if signed else 0
 
-    def __get__(self, obj, objtype=None):
+    def __get__(
+        self,
+        obj: Optional[I2CDeviceDriver],
+        objtype: Optional[Type[I2CDeviceDriver]] = None,
+    ) -> int:
         with obj.i2c_device as i2c:
             i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
         # read the number of bytes into a single variable
@@ -67,7 +77,7 @@ class RWBits:
             reg -= 2 * self.sign_bit
         return reg
 
-    def __set__(self, obj, value):
+    def __set__(self, obj: I2CDeviceDriver, value: int) -> None:
         value <<= self.lowest_bit  # shift the value over to the right spot
         with obj.i2c_device as i2c:
             i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
@@ -100,5 +110,5 @@ class ROBits(RWBits):
     :param int register_width: The number of bytes in the register. Defaults to 1.
     """
 
-    def __set__(self, obj, value):
+    def __set__(self, obj: I2CDeviceDriver, value: int) -> NoReturn:
         raise AttributeError()
