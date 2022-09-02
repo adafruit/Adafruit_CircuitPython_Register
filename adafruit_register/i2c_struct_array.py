@@ -12,10 +12,16 @@ Array of structured registers based on `struct`
 * Author(s): Scott Shawcroft
 """
 
-import struct
-
 __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
+
+import struct
+
+try:
+    from typing import Tuple, Optional, Type
+    from circuitpython_typing.device_drivers import I2CDeviceDriver
+except ImportError:
+    pass
 
 
 class _BoundStructArray:
@@ -24,17 +30,23 @@ class _BoundStructArray:
 
     :param object obj: The device object to bind to. It must have a `i2c_device` attribute
     :param int register_address: The register address to read the bit from
-    :param type struct_format: The struct format string for each register element
+    :param str struct_format: The struct format string for each register element
     :param int count: Number of elements in the array
     """
 
-    def __init__(self, obj, register_address, struct_format, count):
+    def __init__(
+        self,
+        obj: I2CDeviceDriver,
+        register_address: int,
+        struct_format: str,
+        count: int,
+    ) -> None:
         self.format = struct_format
         self.first_register = register_address
         self.obj = obj
         self.count = count
 
-    def _get_buffer(self, index):
+    def _get_buffer(self, index: int) -> bytearray:
         """Shared bounds checking and buffer creation."""
         if not 0 <= index < self.count:
             raise IndexError()
@@ -45,19 +57,19 @@ class _BoundStructArray:
         buf[0] = self.first_register + size * index
         return buf
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Tuple:
         buf = self._get_buffer(index)
         with self.obj.i2c_device as i2c:
             i2c.write_then_readinto(buf, buf, out_end=1, in_start=1)
         return struct.unpack_from(self.format, buf, 1)  # offset=1
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, index: int, value: Tuple) -> None:
         buf = self._get_buffer(index)
         struct.pack_into(self.format, buf, 1, *value)
         with self.obj.i2c_device as i2c:
             i2c.write(buf)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.count
 
 
@@ -78,13 +90,17 @@ class StructArray:
     :param int count: Number of elements in the array
     """
 
-    def __init__(self, register_address, struct_format, count):
+    def __init__(self, register_address: int, struct_format: str, count: int) -> None:
         self.format = struct_format
         self.address = register_address
         self.count = count
         self.array_id = "_structarray{}".format(register_address)
 
-    def __get__(self, obj, objtype=None):
+    def __get__(
+        self,
+        obj: Optional[I2CDeviceDriver],
+        objtype: Optional[Type[I2CDeviceDriver]] = None,
+    ) -> _BoundStructArray:
         # We actually can't handle the indexing ourself due to data descriptor limits. So, we return
         # an object that can instead. This object is bound to the object passed in here by its
         # initializer and then cached on the object itself. That way its lifetime is tied to the

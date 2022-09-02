@@ -17,8 +17,15 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
 import time
 
+try:
+    from typing import Optional, Type
+    from typing_extensions import Literal
+    from circuitpython_typing.device_drivers import I2CDeviceDriver
+except ImportError:
+    pass
 
-def _bcd2bin(value):
+
+def _bcd2bin(value: int) -> int:
     """Convert binary coded decimal to Binary
 
     :param value: the BCD value to convert to binary (required, no default)
@@ -26,7 +33,7 @@ def _bcd2bin(value):
     return value - 6 * (value >> 4)
 
 
-def _bin2bcd(value):
+def _bin2bcd(value: int) -> int:
     """Convert a binary value to binary coded decimal.
 
     :param value: the binary value to convert to BCD. (required, no default)
@@ -52,7 +59,12 @@ class BCDDateTimeRegister:
         week
     """
 
-    def __init__(self, register_address, weekday_first=True, weekday_start=1):
+    def __init__(
+        self,
+        register_address: int,
+        weekday_first: bool = True,
+        weekday_start: Literal[0, 1] = 1,
+    ) -> None:
         self.buffer = bytearray(8)
         self.buffer[0] = register_address
         if weekday_first:
@@ -63,7 +75,11 @@ class BCDDateTimeRegister:
         # Masking value list   n/a  sec min hr day wkday mon year
         self.mask_datetime = b"\xFF\x7F\x7F\x3F\x3F\x07\x1F\xFF"
 
-    def __get__(self, obj, objtype=None):
+    def __get__(
+        self,
+        obj: Optional[I2CDeviceDriver],
+        objtype: Optional[Type[I2CDeviceDriver]] = None,
+    ) -> time.struct_time:
         # Read and return the date and time.
         with obj.i2c_device as i2c:
             i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
@@ -84,7 +100,7 @@ class BCDDateTimeRegister:
             )
         )
 
-    def __set__(self, obj, value):
+    def __set__(self, obj: I2CDeviceDriver, value: time.struct_time) -> None:
         self.buffer[1] = _bin2bcd(value.tm_sec) & 0x7F  # format conversions
         self.buffer[2] = _bin2bcd(value.tm_min)
         self.buffer[3] = _bin2bcd(value.tm_hour)

@@ -4,3 +4,5 @@
 
 Adafruit-Blinka
 adafruit-circuitpython-busdevice
+typing-extensions~=4.0
+adafruit-circuitpython-typing~=1.3
