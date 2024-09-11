@@ -23,7 +23,7 @@ try:
     from circuitpython_typing.device_drivers import I2CDeviceDriver
 
     FREQUENCY_T = Literal[
-        "monthly", "weekly", "daily", "hourly", "secondly", "minutely"
+        "monthly", "weekly", "daily", "hourly", "minutely", "secondly"
     ]
 except ImportError:
     pass
@@ -115,6 +115,9 @@ class BCDAlarmTimeRegister:
                 frequency = "minutely"
                 seconds = _bcd2bin(self.buffer[1] & 0x7F)
             i = 2
+        else:
+            frequency = "minutely"
+            seconds = _bcd2bin(self.buffer[i] & 0x7F)
         minute = 0
         if (self.buffer[i] & 0x80) == 0:
             frequency = "hourly"
@@ -169,7 +172,7 @@ class BCDAlarmTimeRegister:
             raise ValueError(error_message)
 
         frequency = FREQUENCY.index(frequency_name)
-        if frequency <= 1 and not self.has_seconds:
+        if frequency < 1 and not self.has_seconds:
             raise ValueError(error_message)
 
         # i is the index of the minute byte
