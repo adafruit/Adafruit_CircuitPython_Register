@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-branches
 
 """
 `adafruit_register.i2c_bcd_alarm`
