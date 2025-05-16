@@ -1,16 +1,17 @@
 # SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
 # SPDX-License-Identifier: MIT
 
+from adafruit_bus_device.i2c_device import I2CDevice
 from board import SCL, SDA
 from busio import I2C
-from adafruit_bus_device.i2c_device import I2CDevice
+
 from adafruit_register.i2c_struct import Struct
 
 DEVICE_ADDRESS = 0x40  # device address of PCA9685 board
 A_DEVICE_REGISTER = 0x06  # PWM 0 control register on the PCA9685 board
 
 
-class DeviceControl:  # pylint: disable-msg=too-few-public-methods
+class DeviceControl:
     def __init__(self, i2c):
         self.i2c_device = i2c  # self.i2c_device required by Struct class
 

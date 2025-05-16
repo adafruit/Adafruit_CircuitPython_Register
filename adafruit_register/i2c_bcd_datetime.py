@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2016 Scott Shawcroft for Adafruit Industries
 #
 # SPDX-License-Identifier: MIT
-# pylint: disable=too-few-public-methods
 
 """
 `adafruit_register.i2c_bcd_datetime`
@@ -19,8 +18,9 @@ import time
 
 try:
     from typing import Optional, Type
-    from typing_extensions import Literal
+
     from circuitpython_typing.device_drivers import I2CDeviceDriver
+    from typing_extensions import Literal
 except ImportError:
     pass
 
@@ -73,7 +73,7 @@ class BCDDateTimeRegister:
             self.weekday_offset = 1
         self.weekday_start = weekday_start
         # Masking value list   n/a  sec min hr day wkday mon year
-        self.mask_datetime = b"\xFF\x7F\x7F\x3F\x3F\x07\x1F\xFF"
+        self.mask_datetime = b"\xff\x7f\x7f\x3f\x3f\x07\x1f\xff"
 
     def __get__(
         self,
@@ -104,9 +104,7 @@ class BCDDateTimeRegister:
         self.buffer[1] = _bin2bcd(value.tm_sec) & 0x7F  # format conversions
         self.buffer[2] = _bin2bcd(value.tm_min)
         self.buffer[3] = _bin2bcd(value.tm_hour)
-        self.buffer[4 + self.weekday_offset] = _bin2bcd(
-            value.tm_wday + self.weekday_start
-        )
+        self.buffer[4 + self.weekday_offset] = _bin2bcd(value.tm_wday + self.weekday_start)
         self.buffer[5 - self.weekday_offset] = _bin2bcd(value.tm_mday)
         self.buffer[6] = _bin2bcd(value.tm_mon)
         self.buffer[7] = _bin2bcd(value.tm_year - 2000)

@@ -1,5 +1,8 @@
 .. _register-module-reference:
 
+API Reference
+############
+
 Module Reference
 ================
 
