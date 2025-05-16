@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2017 Scott Shawcroft for Adafruit Industries
 #
 # SPDX-License-Identifier: MIT
-# pylint: disable=too-few-public-methods
 
 """
 `adafruit_register.i2c_struct_array`
@@ -18,7 +17,8 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 import struct
 
 try:
-    from typing import Tuple, Optional, Type
+    from typing import Optional, Tuple, Type
+
     from circuitpython_typing.device_drivers import I2CDeviceDriver
 except ImportError:
     pass
@@ -94,7 +94,7 @@ class StructArray:
         self.format = struct_format
         self.address = register_address
         self.count = count
-        self.array_id = "_structarray{}".format(register_address)
+        self.array_id = f"_structarray{register_address}"
 
     def __get__(
         self,

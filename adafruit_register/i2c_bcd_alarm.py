@@ -1,8 +1,6 @@
 # SPDX-FileCopyrightText: 2016 Scott Shawcroft for Adafruit Industries
 #
 # SPDX-License-Identifier: MIT
-# pylint: disable=too-few-public-methods
-# pylint: disable=too-many-branches
 
 """
 `adafruit_register.i2c_bcd_alarm`
@@ -19,13 +17,12 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 import time
 
 try:
-    from typing import Optional, Type, Tuple
-    from typing_extensions import Literal
-    from circuitpython_typing.device_drivers import I2CDeviceDriver
+    from typing import Optional, Tuple, Type
 
-    FREQUENCY_T = Literal[
-        "monthly", "weekly", "daily", "hourly", "minutely", "secondly"
-    ]
+    from circuitpython_typing.device_drivers import I2CDeviceDriver
+    from typing_extensions import Literal
+
+    FREQUENCY_T = Literal["monthly", "weekly", "daily", "hourly", "minutely", "secondly"]
 except ImportError:
     pass
 
@@ -159,9 +156,7 @@ class BCDAlarmTimeRegister:
             frequency,
         )
 
-    def __set__(
-        self, obj: I2CDeviceDriver, value: Tuple[time.struct_time, FREQUENCY_T]
-    ) -> None:
+    def __set__(self, obj: I2CDeviceDriver, value: Tuple[time.struct_time, FREQUENCY_T]) -> None:
         if len(value) != 2:
             raise ValueError("Value must be sequence of length two")
         # Turn all components off by default.
@@ -190,9 +185,7 @@ class BCDAlarmTimeRegister:
 
         if value[1] == "weekly":
             if self.weekday_shared:
-                self.buffer[i + 2] = (
-                    _bin2bcd(value[0].tm_wday + self.weekday_start) | 0x40
-                )
+                self.buffer[i + 2] = _bin2bcd(value[0].tm_wday + self.weekday_start) | 0x40
             else:
                 self.buffer[i + 3] = _bin2bcd(value[0].tm_wday + self.weekday_start)
         elif value[1] == "monthly":

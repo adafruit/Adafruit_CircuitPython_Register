@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2016 Scott Shawcroft for Adafruit Industries
 #
 # SPDX-License-Identifier: MIT
-# pylint: disable=too-few-public-methods
 
 """
 `adafruit_register.i2c_bit`
@@ -16,7 +15,8 @@ __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
 try:
-    from typing import Optional, Type, NoReturn
+    from typing import NoReturn, Optional, Type
+
     from circuitpython_typing.device_drivers import I2CDeviceDriver
 except ImportError:
     pass

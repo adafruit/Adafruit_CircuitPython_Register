@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2016 Scott Shawcroft for Adafruit Industries
 #
 # SPDX-License-Identifier: MIT
-# pylint: disable=too-few-public-methods
 
 """
 `adafruit_register.i2c_struct`
@@ -18,7 +17,8 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 import struct
 
 try:
-    from typing import Optional, Type, Tuple, Any, NoReturn
+    from typing import Any, NoReturn, Optional, Tuple, Type
+
     from circuitpython_typing.device_drivers import I2CDeviceDriver
 except ImportError:
     pass
