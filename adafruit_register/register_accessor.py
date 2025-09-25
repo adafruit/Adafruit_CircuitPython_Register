@@ -16,8 +16,24 @@ __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
 
+try:
+    from typing import Union
+
+    from adafruit_bus_device.i2c_device import I2CDevice
+    from adafruit_bus_device.spi_device import SPIDevice
+except ImportError:
+    pass
+
+
 class SPIRegisterAccessor:
-    def __init__(self, spi_device):
+    """
+    RegisterAccessor class for SPI bus transport. Provides interface to read/write
+    registers over SPI.
+
+    :param SPIDevice spi_device: The SPI bus device to communicate over.
+    """
+
+    def __init__(self, spi_device: SPIDevice):
         self.spi_device = spi_device
 
     def _shift_rw_cmd_bit_into_address_byte(self, buffer, bit_value):
@@ -29,13 +45,42 @@ class SPIRegisterAccessor:
         # Set the MSB to the desired bit value
         buffer[0] = cleared_byte | (bit_value << 7)
 
-    def read_register(self, buffer):
+    def read_register(self, buffer: bytearray):
+        """
+        Read register value over SPIDevice.
+
+        :param bytearray buffer: Buffer must have register address value at index 0.
+          Must be long enough to be read all data send by the device. Data will be
+          read into indexes 1-N.
+        :return: None
+        """
         with self.spi_device as spi:
             self._shift_rw_cmd_bit_into_address_byte(buffer, 1)
             spi.write(buffer, end=1)
             spi.readinto(buffer, start=1)
 
-    def write_register(self, buffer, value, lsb_first, bit_mask, lowest_bit, byte=None):
+    def write_register(
+        self,
+        buffer: bytearray,
+        value: Union[int, bool],
+        lsb_first: bool,
+        bit_mask: int,
+        lowest_bit: int,
+        byte=None,
+    ):
+        """
+        Write register value over SPIDevice.
+
+        :param bytearray buffer: Buffer must have register address value at index 0.
+          Must be long enough to be read all data send by the device for specified register.
+        :param Union[int, bool] value: Value to write to the register.
+        :param bool lsb_first: Whether the least significant byte is first in multibyte registers.
+        :param int bit_mask: Bitmask of the bits where value  will be written within the full data
+          of the register.
+        :param int lowest_bit: Index of the lowest bit in the full data of the register.
+        :param byte: Byte index within the full data of a multibyte register.
+        :return: None
+        """
         # read current register data
         with self.spi_device as spi:
             self._shift_rw_cmd_bit_into_address_byte(buffer, 1)
@@ -73,31 +118,67 @@ class SPIRegisterAccessor:
 
 
 class I2CRegisterAccessor:
-    def __init__(self, i2c_device):
+    """
+    RegisterAccessor class for I2C bus transport. Provides interface to read/write
+    registers over I2C
+
+    :param I2CDevice i2c_device: I2C device to communicate over
+    """
+
+    def __init__(self, i2c_device: I2CDevice):
         self.i2c_device = i2c_device
         pass
 
     def read_register(self, buffer):
+        """
+        Read register value over I2CDevice.
+
+        :param bytearray buffer: Buffer must have register address value at index 0.
+          Must be long enough to be read all data send by the device. Data will be
+          read into indexes 1-N.
+        :return: None
+        """
         with self.i2c_device as i2c:
             i2c.write_then_readinto(buffer, buffer, out_end=1, in_start=1)
 
     def write_register(self, buffer, value, lsb_first, bit_mask, lowest_bit, byte=None):
+        """
+        Write register value over I2CDevice.
+
+        :param bytearray buffer: Buffer must have register address value at index 0.
+          Must be long enough to be read all data send by the device for specified register.
+        :param Union[int, bool] value: Value to write to the register.
+        :param bool lsb_first: Whether the least significant byte is first in multibyte registers.
+        :param int bit_mask: Bitmask of the bits where value  will be written within the full data
+          of the register.
+        :param int lowest_bit: Index of the lowest bit in the full data of the register.
+        :param byte: Byte index within the buffer where boolean value will be written into.
+        :return: None
+        """
 
         value <<= lowest_bit  # shift the value over to the right spot
         with self.i2c_device as i2c:
             i2c.write_then_readinto(buffer, buffer, out_end=1, in_start=1)
 
-            reg = 0
-            order = range(len(buffer) - 1, 0, -1)
-            if not lsb_first:
-                order = range(1, len(buffer))
-            for i in order:
-                reg = (reg << 8) | buffer[i]
-            # print("old reg: ", hex(reg))
-            reg &= ~bit_mask  # mask off the bits we're about to change
-            reg |= value  # then or in our new value
-            # print("new reg: ", hex(reg))
-            for i in reversed(order):
-                buffer[i] = reg & 0xFF
-                reg >>= 8
+            if isinstance(value, int):
+                reg = 0
+                order = range(len(buffer) - 1, 0, -1)
+                if not lsb_first:
+                    order = range(1, len(buffer))
+                for i in order:
+                    reg = (reg << 8) | buffer[i]
+                # print("old reg: ", hex(reg))
+                reg &= ~bit_mask  # mask off the bits we're about to change
+                reg |= value  # then or in our new value
+                # print("new reg: ", hex(reg))
+                for i in reversed(order):
+                    buffer[i] = reg & 0xFF
+                    reg >>= 8
+
+            elif isinstance(value, bool):
+                if value:
+                    buffer[byte] |= bit_mask
+                else:
+                    buffer[byte] &= ~bit_mask
+
             i2c.write(buffer)
