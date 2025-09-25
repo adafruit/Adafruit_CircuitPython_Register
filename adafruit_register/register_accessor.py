@@ -12,6 +12,9 @@ SPI and I2C Register Accessor classes.
 * Adaptation by Tim Cocks
 """
 
+__version__ = "0.0.0+auto.0"
+__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
+
 
 class SPIRegisterAccessor:
     def __init__(self, spi_device):
@@ -70,11 +73,31 @@ class SPIRegisterAccessor:
 
 
 class I2CRegisterAccessor:
-    def __init__(self, bus):
+    def __init__(self, i2c_device):
+        self.i2c_device = i2c_device
         pass
 
-    def read_register(self, address):
-        pass
+    def read_register(self, buffer):
+        with self.i2c_device as i2c:
+            i2c.write_then_readinto(buffer, buffer, out_end=1, in_start=1)
 
-    def write_register(self, address, value):
-        pass
+    def write_register(self, buffer, value, lsb_first, bit_mask, lowest_bit, byte=None):
+
+        value <<= lowest_bit  # shift the value over to the right spot
+        with self.i2c_device as i2c:
+            i2c.write_then_readinto(buffer, buffer, out_end=1, in_start=1)
+
+            reg = 0
+            order = range(len(buffer) - 1, 0, -1)
+            if not lsb_first:
+                order = range(1, len(buffer))
+            for i in order:
+                reg = (reg << 8) | buffer[i]
+            # print("old reg: ", hex(reg))
+            reg &= ~bit_mask  # mask off the bits we're about to change
+            reg |= value  # then or in our new value
+            # print("new reg: ", hex(reg))
+            for i in reversed(order):
+                buffer[i] = reg & 0xFF
+                reg >>= 8
+            i2c.write(buffer)
