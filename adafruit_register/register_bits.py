@@ -26,7 +26,7 @@ class RWBits:
     :param int register_address: The register address to read the bit from
     :param int lowest_bit: The lowest bits index within the byte at ``register_address``
     :param int register_width: The number of bytes in the register. Defaults to 1.
-    :param bool lsb_first: Is the first byte we read from SPI the LSB? Defaults to true
+    :param bool lsb_first: Is the first byte we read from the bus the LSB? Defaults to true
     :param int address_width: The width of the register address in bytes. Defaults to 1.
     """
 
@@ -47,23 +47,15 @@ class RWBits:
         self.lowest_bit = lowest_bit
 
         self.address_width = address_width
+        self.address = register_address
         self.buffer = bytearray(address_width + register_width)
-
-        # Pack possible multibyte address into the buffer
-        for i in range(address_width):
-            if lsb_first:
-                # Little-endian: least significant byte first
-                self.buffer[i] = (register_address >> (i * 8)) & 0xFF
-            else:
-                # Big-endian: most significant byte first
-                self.buffer[i] = (register_address >> ((address_width - 1 - i) * 8)) & 0xFF
 
         # self.buffer[1] = register_width - 1
         self.lsb_first = lsb_first
 
     def __get__(self, obj, objtype=None):
         # read data from register
-        obj.register_accessor.read_register(self.buffer)
+        obj.register_accessor.read_register(self.address, self.lsb_first, self.buffer)
 
         # read the bytes into a single variable
         reg = 0
@@ -79,7 +71,7 @@ class RWBits:
 
     def __set__(self, obj, value):
         # read current data from register
-        obj.register_accessor.read_register(self.buffer)
+        obj.register_accessor.read_register(self.address, self.lsb_first, self.buffer)
 
         # shift in integer value to register data
         reg = 0
@@ -98,7 +90,7 @@ class RWBits:
             reg >>= 8
 
         # write updated data into the register
-        obj.register_accessor.write_register(self.buffer)
+        obj.register_accessor.write_register(self.address, self.lsb_first, self.buffer)
 
 
 class ROBits(RWBits):

@@ -43,15 +43,6 @@ class RWBit:
         self.address_width = address_width
         self.buffer = bytearray(address_width + register_width)
 
-        # Pack possible multibyte address into the buffer
-        for i in range(address_width):
-            if lsb_first:
-                # Little-endian: least significant byte first
-                self.buffer[i] = (register_address >> (i * 8)) & 0xFF
-            else:
-                # Big-endian: most significant byte first
-                self.buffer[i] = (register_address >> ((address_width - 1 - i) * 8)) & 0xFF
-
         self.lsb_first = lsb_first
         self.bit_index = bit
         if lsb_first:
@@ -63,14 +54,14 @@ class RWBit:
 
     def __get__(self, obj, objtype=None):
         # read data from register
-        obj.register_accessor.read_register(self.buffer)
+        obj.register_accessor.read_register(self.address, self.lsb_first, self.buffer)
 
         # check specified bit and return boolean
         return bool(self.buffer[self.byte] & self.bit_mask)
 
     def __set__(self, obj, value):
         # read current data from register
-        obj.register_accessor.read_register(self.buffer)
+        obj.register_accessor.read_register(self.address, self.lsb_first, self.buffer)
 
         # update current data with new value
         if value:
@@ -79,7 +70,7 @@ class RWBit:
             self.buffer[self.byte] &= ~self.bit_mask
 
         # write updated data to register
-        obj.register_accessor.write_register(self.buffer)
+        obj.register_accessor.write_register(self.address, self.lsb_first, self.buffer)
 
 
 class ROBit(RWBit):
