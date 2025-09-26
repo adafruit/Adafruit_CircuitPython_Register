@@ -62,56 +62,15 @@ class SPIRegisterAccessor:
     def write_register(
         self,
         buffer: bytearray,
-        value: Union[int, bool],
-        lsb_first: bool,
-        bit_mask: int,
-        lowest_bit: int,
-        byte=None,
     ):
         """
         Write register value over SPIDevice.
 
         :param bytearray buffer: Buffer must have register address value at index 0.
           Must be long enough to be read all data send by the device for specified register.
-        :param Union[int, bool] value: Value to write to the register.
-        :param bool lsb_first: Whether the least significant byte is first in multibyte registers.
-        :param int bit_mask: Bitmask of the bits where value  will be written within the full data
-          of the register.
-        :param int lowest_bit: Index of the lowest bit in the full data of the register.
-        :param byte: Byte index within the full data of a multibyte register.
         :return: None
         """
-        # read current register data
-        with self.spi_device as spi:
-            self._shift_rw_cmd_bit_into_address_byte(buffer, 1)
-            spi.write(buffer, end=1)
-            spi.readinto(buffer, start=1)
 
-        if isinstance(value, int):
-            # shift in integer value to register data
-            reg = 0
-            order = range(len(buffer) - 1, 0, -1)
-            if not lsb_first:
-                order = range(1, len(buffer))
-            for i in order:
-                reg = (reg << 8) | buffer[i]
-
-            shifted_value = value << lowest_bit
-            reg &= ~bit_mask  # mask off the bits we're about to change
-            reg |= shifted_value  # then or in our new value
-
-            # put data from reg back into buffer
-            for i in reversed(order):
-                buffer[i] = reg & 0xFF
-                reg >>= 8
-        elif isinstance(value, bool):
-            # shift in single bit value to register data
-            if value:
-                buffer[byte] |= bit_mask
-            else:
-                buffer[byte] &= ~bit_mask
-
-        # write updated register data
         with self.spi_device as spi:
             self._shift_rw_cmd_bit_into_address_byte(buffer, 0)
             spi.write(buffer)
@@ -141,44 +100,14 @@ class I2CRegisterAccessor:
         with self.i2c_device as i2c:
             i2c.write_then_readinto(buffer, buffer, out_end=1, in_start=1)
 
-    def write_register(self, buffer, value, lsb_first, bit_mask, lowest_bit, byte=None):
+    def write_register(self, buffer):
         """
         Write register value over I2CDevice.
 
         :param bytearray buffer: Buffer must have register address value at index 0.
           Must be long enough to be read all data send by the device for specified register.
-        :param Union[int, bool] value: Value to write to the register.
-        :param bool lsb_first: Whether the least significant byte is first in multibyte registers.
-        :param int bit_mask: Bitmask of the bits where value  will be written within the full data
-          of the register.
-        :param int lowest_bit: Index of the lowest bit in the full data of the register.
-        :param byte: Byte index within the buffer where boolean value will be written into.
         :return: None
         """
 
-        value <<= lowest_bit  # shift the value over to the right spot
         with self.i2c_device as i2c:
-            i2c.write_then_readinto(buffer, buffer, out_end=1, in_start=1)
-
-            if isinstance(value, int):
-                reg = 0
-                order = range(len(buffer) - 1, 0, -1)
-                if not lsb_first:
-                    order = range(1, len(buffer))
-                for i in order:
-                    reg = (reg << 8) | buffer[i]
-                # print("old reg: ", hex(reg))
-                reg &= ~bit_mask  # mask off the bits we're about to change
-                reg |= value  # then or in our new value
-                # print("new reg: ", hex(reg))
-                for i in reversed(order):
-                    buffer[i] = reg & 0xFF
-                    reg >>= 8
-
-            elif isinstance(value, bool):
-                if value:
-                    buffer[byte] |= bit_mask
-                else:
-                    buffer[byte] &= ~bit_mask
-
             i2c.write(buffer)

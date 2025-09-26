@@ -28,27 +28,58 @@ class RWBit:
 
     """
 
-    def __init__(self, register_address, bit, register_width=1, lsb_first=True):
+    def __init__(
+        self,
+        register_address: int,
+        bit: int,
+        register_width: int = 1,
+        lsb_first: bool = True,
+        address_width: int = 1,
+    ):
         self.bit_mask = 1 << (bit % 8)  # the bitmask *within* the byte!
-        self.buffer = bytearray(1 + register_width)
+
         self.address = register_address
-        self.buffer[0] = register_address
-        self.buffer[1] = register_width - 1
+
+        self.address_width = address_width
+        self.buffer = bytearray(address_width + register_width)
+
+        # Pack possible multibyte address into the buffer
+        for i in range(address_width):
+            if lsb_first:
+                # Little-endian: least significant byte first
+                self.buffer[i] = (register_address >> (i * 8)) & 0xFF
+            else:
+                # Big-endian: most significant byte first
+                self.buffer[i] = (register_address >> ((address_width - 1 - i) * 8)) & 0xFF
+
         self.lsb_first = lsb_first
         self.bit_index = bit
         if lsb_first:
-            self.byte = bit // 8 + 1  # the byte number within the buffer
+            self.byte = address_width + (bit // 8)  # Little-endian: bit 0 in first register byte
         else:
-            self.byte = register_width - (bit // 8)  # the byte number within the buffer
+            self.byte = (
+                address_width + register_width - 1 - (bit // 8)
+            )  # Big-endian: bit 0 in last register byte
 
     def __get__(self, obj, objtype=None):
+        # read data from register
         obj.register_accessor.read_register(self.buffer)
+
+        # check specified bit and return boolean
         return bool(self.buffer[self.byte] & self.bit_mask)
 
     def __set__(self, obj, value):
-        obj.register_accessor.write_register(
-            self.buffer, value, self.lsb_first, self.bit_mask, self.bit_index, byte=self.byte
-        )
+        # read current data from register
+        obj.register_accessor.read_register(self.buffer)
+
+        # update current data with new value
+        if value:
+            self.buffer[self.byte] |= self.bit_mask
+        else:
+            self.buffer[self.byte] &= ~self.bit_mask
+
+        # write updated data to register
+        obj.register_accessor.write_register(self.buffer)
 
 
 class ROBit(RWBit):
