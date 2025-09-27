@@ -25,6 +25,8 @@ except ImportError:
 
 
 class RegisterAccessor:
+    address_width = None
+
     def _pack_address_into_buffer(self, address, lsb_first, buffer):
         # Pack address into the buffer
         for i in range(self.address_width):
@@ -33,7 +35,9 @@ class RegisterAccessor:
                 buffer[i] = (address >> (i * 8)) & 0xFF
             else:
                 # Big-endian: most significant byte first
-                buffer[i] = (address >> ((address - 1 - i) * 8)) & 0xFF
+                big_endian_address = address.to_bytes(self.address_width, byteorder="big")
+                for address_byte_i in range(self.address_width):
+                    buffer[address_byte_i] = big_endian_address[address_byte_i]
 
 
 class SPIRegisterAccessor(RegisterAccessor):
@@ -74,8 +78,8 @@ class SPIRegisterAccessor(RegisterAccessor):
         self._pack_address_into_buffer(address, lsb_first, buffer)
         self._shift_rw_cmd_bit_into_address_byte(buffer, 1)
         with self.spi_device as spi:
-            spi.write(buffer, end=self.address_width)
-            spi.readinto(buffer, start=self.address_width)
+            spi.write(buffer, end=1)
+            spi.readinto(buffer, start=1)
 
     def write_register(
         self,

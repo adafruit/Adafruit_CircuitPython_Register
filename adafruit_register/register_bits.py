@@ -27,6 +27,8 @@ class RWBits:
     :param int lowest_bit: The lowest bits index within the byte at ``register_address``
     :param int register_width: The number of bytes in the register. Defaults to 1.
     :param bool lsb_first: Is the first byte we read from the bus the LSB? Defaults to true
+    :param bool signed: If True, the value is a "two's complement" signed value.
+      If False, it is unsigned.
     :param int address_width: The width of the register address in bytes. Defaults to 1.
     """
 
@@ -38,6 +40,7 @@ class RWBits:
         lowest_bit: int,
         register_width: int = 1,
         lsb_first: bool = True,
+        signed: bool = False,
         address_width: int = 1,
     ):
         self.bit_mask = ((1 << num_bits) - 1) << lowest_bit
@@ -50,8 +53,8 @@ class RWBits:
         self.address = register_address
         self.buffer = bytearray(address_width + register_width)
 
-        # self.buffer[1] = register_width - 1
         self.lsb_first = lsb_first
+        self.sign_bit = (1 << (num_bits - 1)) if signed else 0
 
     def __get__(self, obj, objtype=None):
         # read data from register
@@ -67,6 +70,11 @@ class RWBits:
 
         # extract integer value from specified bits
         result = (reg & self.bit_mask) >> self.lowest_bit
+
+        # If the value is signed and negative, convert it
+        if result & self.sign_bit:
+            result -= 2 * self.sign_bit
+
         return result
 
     def __set__(self, obj, value):
