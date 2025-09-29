@@ -29,39 +29,31 @@ class RWBit:
     """
 
     def __init__(
-        self,
-        register_address: int,
-        bit: int,
-        register_width: int = 1,
-        lsb_first: bool = True,
-        address_width: int = 1,
+        self, register_address: int, bit: int, register_width: int = 1, lsb_first: bool = True
     ):
         self.bit_mask = 1 << (bit % 8)  # the bitmask *within* the byte!
 
         self.address = register_address
 
-        self.address_width = address_width
-        self.buffer = bytearray(address_width + register_width)
+        self.buffer = bytearray(register_width)
 
         self.lsb_first = lsb_first
         self.bit_index = bit
         if lsb_first:
-            self.byte = address_width + (bit // 8)  # Little-endian: bit 0 in first register byte
+            self.byte = bit // 8  # Little-endian: bit 0 in first register byte
         else:
-            self.byte = (
-                address_width + register_width - 1 - (bit // 8)
-            )  # Big-endian: bit 0 in last register byte
+            self.byte = register_width - 1 - (bit // 8)  # Big-endian: bit 0 in last register byte
 
     def __get__(self, obj, objtype=None):
         # read data from register
-        obj.register_accessor.read_register(self.address, self.lsb_first, self.buffer)
+        obj.register_accessor.read_register(self.address, self.buffer)
 
         # check specified bit and return boolean
         return bool(self.buffer[self.byte] & self.bit_mask)
 
     def __set__(self, obj, value):
         # read current data from register
-        obj.register_accessor.read_register(self.address, self.lsb_first, self.buffer)
+        obj.register_accessor.read_register(self.address, self.buffer)
 
         # update current data with new value
         if value:
@@ -70,7 +62,7 @@ class RWBit:
             self.buffer[self.byte] &= ~self.bit_mask
 
         # write updated data to register
-        obj.register_accessor.write_register(self.address, self.lsb_first, self.buffer)
+        obj.register_accessor.write_register(self.address, self.buffer)
 
 
 class ROBit(RWBit):

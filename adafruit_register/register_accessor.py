@@ -25,19 +25,31 @@ except ImportError:
 
 
 class RegisterAccessor:
+    """
+    Subclasses of this class will be used to provide read/write interface to registers
+    over different bus types.
+
+    :param int address_width: The width of the register addresses in bytes. Defaults to 1.
+    :param bool lsb_first: Is the first byte we read from the bus the LSB? Defaults to true
+    """
+
     address_width = None
 
-    def _pack_address_into_buffer(self, address, lsb_first, buffer):
-        # Pack address into the buffer
-        for i in range(self.address_width):
-            if lsb_first:
-                # Little-endian: least significant byte first
-                buffer[i] = (address >> (i * 8)) & 0xFF
-            else:
-                # Big-endian: most significant byte first
-                big_endian_address = address.to_bytes(self.address_width, byteorder="big")
-                for address_byte_i in range(self.address_width):
-                    buffer[address_byte_i] = big_endian_address[address_byte_i]
+    def __init__(self, address_width=1, lsb_first=True):
+        self.address_width = address_width
+        self.address_buffer = bytearray(address_width)
+        self.lsb_first = lsb_first
+
+    def _pack_address_into_buffer(self, address):
+        if self.lsb_first:
+            # Little-endian: least significant byte first
+            for address_byte_i in range(self.address_width):
+                self.address_buffer[address_byte_i] = (address >> (address_byte_i * 8)) & 0xFF
+        else:
+            # Big-endian: most significant byte first
+            big_endian_address = address.to_bytes(self.address_width, byteorder="big")
+            for address_byte_i in range(self.address_width):
+                self.address_buffer[address_byte_i] = big_endian_address[address_byte_i]
 
 
 class SPIRegisterAccessor(RegisterAccessor):
@@ -49,58 +61,51 @@ class SPIRegisterAccessor(RegisterAccessor):
     :param int address_width: The number of bytes in the address
     """
 
-    def __init__(self, spi_device: SPIDevice, address_width: int = 1):
-        self.address_width = address_width
+    def __init__(self, spi_device: SPIDevice, address_width: int = 1, lsb_first=True):
+        super().__init__(address_width, lsb_first)
         self.spi_device = spi_device
 
-    def _shift_rw_cmd_bit_into_address_byte(self, buffer, bit_value):
+    def _shift_rw_cmd_bit_into_first_byte(self, bit_value):
         if bit_value not in {0, 1}:
             raise ValueError("bit_value must be 0 or 1")
 
         # Clear the MSB (set bit 7 to 0)
-        cleared_byte = buffer[0] & 0x7F
+        cleared_byte = self.address_buffer[0] & 0x7F
         # Set the MSB to the desired bit value
-        buffer[0] = cleared_byte | (bit_value << 7)
+        self.address_buffer[0] = cleared_byte | (bit_value << 7)
 
-    def read_register(self, address: int, lsb_first: bool, buffer: bytearray):
+    def read_register(self, address: int, buffer: bytearray):
         """
         Read register value over SPIDevice.
 
         :param int address: The register address to read.
-        :param bool lsb_first: Is the first byte we read from the bus the LSB?
-        :param bytearray buffer: Buffer that will be used to write/read register data.
-          `address` will be put into the first `address_width` bytes of the buffer, data
-          will be read into the buffer following the address.
+        :param bytearray buffer: Buffer that will be used to read register data into.
           Buffer must be long enough to be read all data sent by the device.
         :return: None
         """
 
-        self._pack_address_into_buffer(address, lsb_first, buffer)
-        self._shift_rw_cmd_bit_into_address_byte(buffer, 1)
+        self._pack_address_into_buffer(address)
+        self._shift_rw_cmd_bit_into_first_byte(1)
         with self.spi_device as spi:
-            spi.write(buffer, end=1)
-            spi.readinto(buffer, start=1)
+            spi.write(self.address_buffer)
+            spi.readinto(buffer)
 
     def write_register(
         self,
         address: int,
-        lsb_first: bool,
         buffer: bytearray,
     ):
         """
         Write register value over SPIDevice.
 
         :param int address: The register address to read.
-        :param bool lsb_first: Is the first byte we read from the bus the LSB?
         :param bytearray buffer: Buffer that will be written to the register.
-          `address` will be put into the first `address_width` bytes of the buffer
         :return: None
         """
-        self._pack_address_into_buffer(address, lsb_first, buffer)
-        self._shift_rw_cmd_bit_into_address_byte(buffer, 0)
+        self._pack_address_into_buffer(address)
+        self._shift_rw_cmd_bit_into_first_byte(0)
         with self.spi_device as spi:
-            self._shift_rw_cmd_bit_into_address_byte(buffer, 0)
-            spi.write(buffer)
+            spi.write(self.address_buffer + buffer)
 
 
 class I2CRegisterAccessor(RegisterAccessor):
@@ -112,40 +117,50 @@ class I2CRegisterAccessor(RegisterAccessor):
     :param int address_width: The number of bytes in the address
     """
 
-    def __init__(self, i2c_device: I2CDevice, address_width: int = 1):
+    def __init__(self, i2c_device: I2CDevice, address_width: int = 1, lsb_first=True):
+        super().__init__(address_width, lsb_first)
         self.i2c_device = i2c_device
-        self.address_width = address_width
 
-    def read_register(self, address: int, lsb_first: bool, buffer: bytearray):
+        # buffer that will hold address + data for write_then_readinto operations
+        # will grow as needed
+        self._full_buffer = bytearray(address_width + 1)
+
+    def read_register(self, address: int, buffer: bytearray):
         """
         Read register value over I2CDevice.
 
         :param int address: The register address to read.
-        :param bool lsb_first: Is the first byte we read from the bus the LSB? Defaults to true
-        :param bytearray buffer: Buffer that will be used to write/read register data.
-          address will be put into the first `address_width` bytes of the buffer, data
-          will be read into the buffer following the address.
+        :param bytearray buffer: Buffer that will be used to read register data into.
           Buffer must be long enough to be read all data sent by the device.
         :return: None
         """
+        if self.address_width + len(buffer) > len(self._full_buffer):
+            self._full_buffer = bytearray(self.address_width + len(buffer))
 
-        self._pack_address_into_buffer(address, lsb_first, buffer)
+        self._pack_address_into_buffer(address)
+        for i in range(self.address_width):
+            self._full_buffer[i] = self.address_buffer[i]
+
         with self.i2c_device as i2c:
             i2c.write_then_readinto(
-                buffer, buffer, out_end=self.address_width, in_start=self.address_width
+                self._full_buffer,
+                self._full_buffer,
+                out_end=self.address_width,
+                in_start=self.address_width,
             )
+        # copy data from _full_buffer into buffer
+        for i in range(len(buffer)):
+            buffer[i] = self._full_buffer[self.address_width + i]
 
-    def write_register(self, address: int, lsb_first: bool, buffer: bytearray):
+    def write_register(self, address: int, buffer: bytearray):
         """
         Write register value over I2CDevice.
 
         :param int address: The register address to read.
-        :param bool lsb_first: Is the first byte we read from the bus the LSB? Defaults to true
-        :param bytearray buffer: Buffer must have register address value at index 0.
-          Must be long enough to be read all data send by the device for specified register.
+        :param bytearray buffer: Buffer of data that will be written to the register.
 
         :return: None
         """
-        self._pack_address_into_buffer(address, lsb_first, buffer)
+        self._pack_address_into_buffer(address)
         with self.i2c_device as i2c:
-            i2c.write(buffer)
+            i2c.write(self.address_buffer + buffer)

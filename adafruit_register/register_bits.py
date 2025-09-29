@@ -17,8 +17,7 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
 class RWBits:
     """
-    Multibit register (less than a full byte) that is readable and writeable.
-    This must be within a byte register.
+    Multibit register that is readable and writeable.
 
     Values are `int` between 0 and 2 ** ``num_bits`` - 1.
 
@@ -29,7 +28,7 @@ class RWBits:
     :param bool lsb_first: Is the first byte we read from the bus the LSB? Defaults to true
     :param bool signed: If True, the value is a "two's complement" signed value.
       If False, it is unsigned.
-    :param int address_width: The width of the register address in bytes. Defaults to 1.
+
     """
 
     # pylint: disable=too-many-arguments
@@ -41,7 +40,6 @@ class RWBits:
         register_width: int = 1,
         lsb_first: bool = True,
         signed: bool = False,
-        address_width: int = 1,
     ):
         self.bit_mask = ((1 << num_bits) - 1) << lowest_bit
 
@@ -49,20 +47,19 @@ class RWBits:
             raise ValueError("Cannot have more bits than register size")
         self.lowest_bit = lowest_bit
 
-        self.address_width = address_width
         self.address = register_address
-        self.buffer = bytearray(address_width + register_width)
+        self.buffer = bytearray(register_width)
 
         self.lsb_first = lsb_first
         self.sign_bit = (1 << (num_bits - 1)) if signed else 0
 
     def __get__(self, obj, objtype=None):
         # read data from register
-        obj.register_accessor.read_register(self.address, self.lsb_first, self.buffer)
+        obj.register_accessor.read_register(self.address, self.buffer)
 
         # read the bytes into a single variable
         reg = 0
-        order = range(len(self.buffer) - 1, self.address_width - 1, -1)
+        order = range(len(self.buffer) - 1, -1, -1)
         if not self.lsb_first:
             order = reversed(order)
         for i in order:
@@ -79,13 +76,13 @@ class RWBits:
 
     def __set__(self, obj, value):
         # read current data from register
-        obj.register_accessor.read_register(self.address, self.lsb_first, self.buffer)
+        obj.register_accessor.read_register(self.address, self.buffer)
 
         # shift in integer value to register data
         reg = 0
-        order = range(len(self.buffer) - 1, self.address_width - 1, -1)
+        order = range(len(self.buffer) - 1, -1, -1)
         if not self.lsb_first:
-            order = range(1, len(self.buffer))
+            order = reversed(order)
         for i in order:
             reg = (reg << 8) | self.buffer[i]
         shifted_value = value << self.lowest_bit
@@ -97,21 +94,23 @@ class RWBits:
             self.buffer[i] = reg & 0xFF
             reg >>= 8
 
-        # write updated data into the register
-        obj.register_accessor.write_register(self.address, self.lsb_first, self.buffer)
+        # write updated data buffer to the register
+        obj.register_accessor.write_register(self.address, self.buffer)
 
 
 class ROBits(RWBits):
     """
-    Multibit register (less than a full byte) that is read-only. This must be
-    within a byte register.
+    Multibit register that is read-only.
 
     Values are `int` between 0 and 2 ** ``num_bits`` - 1.
 
     :param int num_bits: The number of bits in the field.
     :param int register_address: The register address to read the bit from
-    :param type lowest_bit: The lowest bits index within the byte at ``register_address``
+    :param int lowest_bit: The lowest bits index within the byte at ``register_address``
     :param int register_width: The number of bytes in the register. Defaults to 1.
+    :param bool lsb_first: Is the first byte we read from the bus the LSB? Defaults to true
+    :param bool signed: If True, the value is a "two's complement" signed value.
+      If False, it is unsigned.
     """
 
     def __set__(self, obj, value):
