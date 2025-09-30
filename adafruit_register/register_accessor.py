@@ -105,7 +105,8 @@ class SPIRegisterAccessor(RegisterAccessor):
         self._pack_address_into_buffer(address)
         self._shift_rw_cmd_bit_into_first_byte(0)
         with self.spi_device as spi:
-            spi.write(self.address_buffer + buffer)
+            spi.write(self.address_buffer)
+            spi.write(buffer)
 
 
 class I2CRegisterAccessor(RegisterAccessor):
@@ -121,8 +122,7 @@ class I2CRegisterAccessor(RegisterAccessor):
         super().__init__(address_width, lsb_first)
         self.i2c_device = i2c_device
 
-        # buffer that will hold address + data for write_then_readinto operations
-        # will grow as needed
+        # buffer that will hold address + data for write operations, will grow as needed
         self._full_buffer = bytearray(address_width + 1)
 
     def read_register(self, address: int, buffer: bytearray):
@@ -134,23 +134,10 @@ class I2CRegisterAccessor(RegisterAccessor):
           Buffer must be long enough to be read all data sent by the device.
         :return: None
         """
-        if self.address_width + len(buffer) > len(self._full_buffer):
-            self._full_buffer = bytearray(self.address_width + len(buffer))
 
         self._pack_address_into_buffer(address)
-        for i in range(self.address_width):
-            self._full_buffer[i] = self.address_buffer[i]
-
         with self.i2c_device as i2c:
-            i2c.write_then_readinto(
-                self._full_buffer,
-                self._full_buffer,
-                out_end=self.address_width,
-                in_start=self.address_width,
-            )
-        # copy data from _full_buffer into buffer
-        for i in range(len(buffer)):
-            buffer[i] = self._full_buffer[self.address_width + i]
+            i2c.write_then_readinto(self.address_buffer, buffer)
 
     def write_register(self, address: int, buffer: bytearray):
         """
@@ -161,6 +148,18 @@ class I2CRegisterAccessor(RegisterAccessor):
 
         :return: None
         """
+        # grow full buffer if needed
+        if self.address_width + len(buffer) > len(self._full_buffer):
+            self._full_buffer = bytearray(self.address_width + len(buffer))
+
+        # put address into full buffer
         self._pack_address_into_buffer(address)
+        for i in range(self.address_width):
+            self._full_buffer[i] = self.address_buffer[i]
+
+        # put data into full buffer
+        for i, b in enumerate(buffer):
+            self._full_buffer[i + self.address_width] = b
+
         with self.i2c_device as i2c:
-            i2c.write(self.address_buffer + buffer)
+            i2c.write(self._full_buffer)
