@@ -117,6 +117,8 @@ class I2CRegisterAccessor(RegisterAccessor):
     registers over I2C. This class uses `adafruit_bus_device.I2CDevice` for
     communication. I2CDevice automatically handles the R/W bit by setting
     the lowest bit of the device address to 1 for reading and 0 for writing.
+    Device address & r/w bit will be written first, followed by register address,
+    then the data will be written or read.
 
     :param I2CDevice i2c_device: I2C device to communicate over
     :param int address_width: The number of bytes in the address
