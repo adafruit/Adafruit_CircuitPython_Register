@@ -55,7 +55,10 @@ class RegisterAccessor:
 class SPIRegisterAccessor(RegisterAccessor):
     """
     RegisterAccessor class for SPI bus transport. Provides interface to read/write
-    registers over SPI.
+    registers over SPI. This class automatically handles the R/W bit by setting the
+    highest bit of the address to 1 when reading and 0 when writing. For multi-byte
+    addresses the R/W bit will be set as the highest bit in the first byte of the
+    address.
 
     :param SPIDevice spi_device: The SPI bus device to communicate over.
     :param int address_width: The number of bytes in the address
@@ -80,7 +83,6 @@ class SPIRegisterAccessor(RegisterAccessor):
 
         :param int address: The register address to read.
         :param bytearray buffer: Buffer that will be used to read register data into.
-          Buffer must be long enough to be read all data sent by the device.
         :return: None
         """
 
@@ -112,7 +114,9 @@ class SPIRegisterAccessor(RegisterAccessor):
 class I2CRegisterAccessor(RegisterAccessor):
     """
     RegisterAccessor class for I2C bus transport. Provides interface to read/write
-    registers over I2C
+    registers over I2C. This class uses `adafruit_bus_device.I2CDevice` for
+    communication. I2CDevice automatically handles the R/W bit by setting
+    the lowest bit of the device address to 1 for reading and 0 for writing.
 
     :param I2CDevice i2c_device: I2C device to communicate over
     :param int address_width: The number of bytes in the address
@@ -131,7 +135,6 @@ class I2CRegisterAccessor(RegisterAccessor):
 
         :param int address: The register address to read.
         :param bytearray buffer: Buffer that will be used to read register data into.
-          Buffer must be long enough to be read all data sent by the device.
         :return: None
         """
 
@@ -145,7 +148,6 @@ class I2CRegisterAccessor(RegisterAccessor):
 
         :param int address: The register address to read.
         :param bytearray buffer: Buffer of data that will be written to the register.
-
         :return: None
         """
         # grow full buffer if needed
@@ -154,12 +156,10 @@ class I2CRegisterAccessor(RegisterAccessor):
 
         # put address into full buffer
         self._pack_address_into_buffer(address)
-        for i in range(self.address_width):
-            self._full_buffer[i] = self.address_buffer[i]
+        self._full_buffer[: self.address_width] = self.address_buffer
 
         # put data into full buffer
-        for i, b in enumerate(buffer):
-            self._full_buffer[i + self.address_width] = b
+        self._full_buffer[self.address_width : self.address_width + len(buffer)] = buffer
 
         with self.i2c_device as i2c:
-            i2c.write(self._full_buffer)
+            i2c.write(self._full_buffer, end=self.address_width + len(buffer))
